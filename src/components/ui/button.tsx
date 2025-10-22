@@ -1,4 +1,4 @@
-import { type ButtonHTMLAttributes } from "react";
+import { type ButtonHTMLAttributes, forwardRef } from "react";
 import { cva } from "./cva";
 import { cn } from "./cn";
 
@@ -27,8 +27,29 @@ const buttonVariants = cva(
   }
 );
 
-export function Button({ className, variant = "default", size = "default", ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "default" | "outline" | "ghost"; size?: "default" | "sm" | "lg" }) {
-  return (
-    <button className={cn(buttonVariants({ variant, size }), className)} {...props} />
-  );
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "default" | "outline" | "ghost";
+  size?: "default" | "sm" | "lg";
+  asChild?: boolean;
 }
+
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant = "default", size = "default", asChild = false, ...props }, ref) => {
+    if (asChild) {
+      const { children, ...restProps } = props;
+      return (
+        <span className={cn(buttonVariants({ variant, size }), className)} {...restProps} ref={ref}>
+          {children}
+        </span>
+      );
+    }
+    
+    return (
+      <button className={cn(buttonVariants({ variant, size }), className)} ref={ref} {...props} />
+    );
+  }
+);
+
+Button.displayName = "Button";
+
+export { Button };

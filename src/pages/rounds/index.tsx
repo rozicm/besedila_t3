@@ -103,7 +103,11 @@ export default function RoundsIndex() {
       if (newIndex < 0 || newIndex >= prev.length) return prev;
       
       const newSongs = [...prev];
-      [newSongs[index], newSongs[newIndex]] = [newSongs[newIndex], newSongs[index]];
+      const temp = newSongs[index];
+      if (temp && newSongs[newIndex]) {
+        newSongs[index] = newSongs[newIndex];
+        newSongs[newIndex] = temp;
+      }
       return newSongs;
     });
   };

@@ -53,9 +53,11 @@ function ReorderList({
     if (!result.destination) return;
     const next = [...local];
     const [removed] = next.splice(result.source.index, 1);
-    next.splice(result.destination.index, 0, removed);
-    setLocal(next);
-    onChange(next.map((i) => i.id));
+    if (removed) {
+      next.splice(result.destination.index, 0, removed);
+      setLocal(next);
+      onChange(next.map((i) => i.id));
+    }
   };
 
   return (
