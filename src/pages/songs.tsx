@@ -1,7 +1,9 @@
 import { api } from "~/utils/api";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import Head from "next/head";
+import { useRouter } from "next/router";
+import { useSession } from "next-auth/react";
 import { 
   Music, 
   Search, 
@@ -30,10 +32,42 @@ import { Separator } from "~/components/ui/separator";
 const GENRES = ["polka", "valcek", "zabavna", "instrumental", "other"] as const;
 
 export default function SongsPage() {
+  const { data: sessionData, status } = useSession();
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [genre, setGenre] = useState<string | undefined>(undefined);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+
+  // Redirect to sign-in if not authenticated
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      void router.push("/auth/signin");
+    }
+  }, [status, router]);
+
+  // Show loading while checking authentication
+  if (status === "loading") {
+    return (
+      <>
+        <Head>
+          <title>Songs - Loading...</title>
+          <meta name="description" content="Loading..." />
+        </Head>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Don't render the main content if not authenticated
+  if (!sessionData) {
+    return null;
+  }
 
   const input = useMemo(
     () => ({ search, genre, favoritesOnly }),

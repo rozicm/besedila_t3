@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Head from "next/head";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/router";
+import { useSession } from "next-auth/react";
 import { 
   Users, 
   Plus, 
@@ -32,12 +34,44 @@ const GENRES = ["polka", "valcek", "zabavna", "instrumental", "other"] as const;
 const HARMONICA_TYPES = ["b_es_as", "c_f_b", "a_d_g"] as const;
 
 export default function RoundsIndex() {
+  const { data: sessionData, status } = useSession();
+  const router = useRouter();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [roundName, setRoundName] = useState("");
   const [roundDescription, setRoundDescription] = useState("");
   const [selectedSongs, setSelectedSongs] = useState<Array<{id: number, title: string, genre: string, key?: string, harmonica?: string, bas_bariton?: string}>>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [filter, setFilter] = useState({ search: "", genre: "", harmonica: "" });
+
+  // Redirect to sign-in if not authenticated
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      void router.push("/auth/signin");
+    }
+  }, [status, router]);
+
+  // Show loading while checking authentication
+  if (status === "loading") {
+    return (
+      <>
+        <Head>
+          <title>Rounds - Loading...</title>
+          <meta name="description" content="Loading..." />
+        </Head>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Don't render the main content if not authenticated
+  if (!sessionData) {
+    return null;
+  }
   
   const roundsQuery = api.rounds.list.useQuery();
   const songsQuery = api.songs.list.useQuery({ search: "", genre: undefined, favoritesOnly: false });

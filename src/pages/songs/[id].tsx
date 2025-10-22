@@ -2,6 +2,8 @@ import { useRouter } from "next/router";
 import { api } from "~/utils/api";
 import Head from "next/head";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { useEffect } from "react";
 import { 
   Music, 
   Download, 
@@ -21,10 +23,41 @@ import { Badge } from "~/components/ui/badge";
 import { Separator } from "~/components/ui/separator";
 
 export default function SongShow() {
+  const { data: sessionData, status } = useSession();
   const router = useRouter();
   const id = Number(router.query.id);
   const list = api.songs.list.useQuery({});
   const song = list.data?.find((s) => s.id === id);
+
+  // Redirect to sign-in if not authenticated
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      void router.push("/auth/signin");
+    }
+  }, [status, router]);
+
+  // Show loading while checking authentication
+  if (status === "loading") {
+    return (
+      <>
+        <Head>
+          <title>Song - Loading...</title>
+          <meta name="description" content="Loading..." />
+        </Head>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Don't render the main content if not authenticated
+  if (!sessionData) {
+    return null;
+  }
   
   if (!Number.isFinite(id)) return null;
   if (!song) return (

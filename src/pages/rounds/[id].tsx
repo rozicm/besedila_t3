@@ -1,10 +1,12 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 import { api } from "~/utils/api";
 import { Button } from "~/components/ui/button";
 
 export default function RoundDetail() {
+  const { data: sessionData, status } = useSession();
   const router = useRouter();
   const id = Number(router.query.id);
   const q = api.rounds.byIdWithSongs.useQuery({ id }, { enabled: Number.isFinite(id) });
@@ -16,6 +18,32 @@ export default function RoundDetail() {
   useEffect(() => {
     if (q.data) setOrderedIds(q.data.roundItems.map((ri) => ri.song.id));
   }, [q.data]);
+
+  // Redirect to sign-in if not authenticated
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      void router.push("/auth/signin");
+    }
+  }, [status, router]);
+
+  // Show loading while checking authentication
+  if (status === "loading") {
+    return (
+      <main className="p-6">
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // Don't render the main content if not authenticated
+  if (!sessionData) {
+    return null;
+  }
 
   if (!Number.isFinite(id)) return null;
   if (q.isLoading) return <main className="p-6">Loading…</main>;

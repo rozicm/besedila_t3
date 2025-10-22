@@ -31,12 +31,30 @@ declare module "next-auth" {
  *
  * @see https://next-auth.js.org/configuration/options
  */
+// Allowed email addresses
+const ALLOWED_EMAILS = [
+  'rozicmatic@gmail.com',
+  'prasnikar6@gmail.com',
+  'anja.kersic5@gmail.com',
+  'lenart.pavlic23@gmail.com'
+];
+
 export const authConfig: NextAuthConfig = {
   providers: [
     DiscordProvider,
   ],
   adapter: PrismaAdapter(db),
   callbacks: {
+    signIn: async ({ user, account, profile }) => {
+      // Check if the user's email is in the allowed list
+      if (user.email && ALLOWED_EMAILS.includes(user.email)) {
+        return true;
+      }
+      
+      // If email is not allowed, return false to deny access
+      console.log(`Access denied for email: ${user.email}`);
+      return false;
+    },
     session: ({ session, user }) => ({
       ...session,
       user: {
