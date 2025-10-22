@@ -13,13 +13,14 @@ const geist = Geist({
 
 const MyApp: AppType = ({
   Component,
-  pageProps: { session, ...pageProps },
+  pageProps,
 }) => {
+  const { session, ...restPageProps } = pageProps as { session?: any; [key: string]: any };
   return (
     <SessionProvider session={session}>
       <div className={geist.className}>
         <Layout>
-          <Component {...pageProps} />
+          <Component {...restPageProps} />
         </Layout>
       </div>
     </SessionProvider>
