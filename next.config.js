@@ -17,6 +17,16 @@ const config = {
     locales: ["en"],
     defaultLocale: "en",
   },
+
+  // Exclude scripts directory from build
+  webpack: (config) => {
+    config.module.rules.push({
+      test: /\.ts$/,
+      include: /scripts/,
+      use: 'ignore-loader'
+    });
+    return config;
+  },
 };
 
 export default config;

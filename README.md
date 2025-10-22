@@ -1,29 +1,132 @@
-# Create T3 App
+# 🎵 Besedila - Beautiful Music Management App
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+A stunning, modern music management application built with the T3 Stack, featuring beautiful glassmorphism effects, gradient backgrounds, and smooth animations.
 
-## What's next? How do I make an app with this?
+## ✨ Features
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+- 🎨 **Stunning Design**: Modern UI with glassmorphism effects and gradient backgrounds
+- 🎵 **Music Collection**: Manage your songs with beautiful card layouts
+- 🎭 **Performance Rounds**: Organize musical performances with style
+- 📱 **Responsive**: Optimized for all screen sizes
+- 🌙 **Dark Mode**: Enhanced color schemes for both light and dark themes
+- ✨ **Smooth Animations**: Micro-interactions and hover effects throughout
+- 🔐 **Authentication**: Secure user authentication with NextAuth.js
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## 🚀 Tech Stack
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+- [Next.js](https://nextjs.org) - React framework
+- [NextAuth.js](https://next-auth.js.org) - Authentication
+- [Prisma](https://prisma.io) - Database ORM
+- [Tailwind CSS](https://tailwindcss.com) - Styling
+- [tRPC](https://trpc.io) - Type-safe APIs
+- [TypeScript](https://www.typescriptlang.org) - Type safety
 
-## Learn More
+## 🛠️ Development
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+```bash
+# Install dependencies
+npm install
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+# Set up environment variables
+cp .env.example .env.local
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+# Run database migrations
+npx prisma migrate dev
 
-## How do I deploy this?
+# Start development server
+npm run dev
+```
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+## 🌐 Deployment
+
+### Vercel Deployment
+
+1. **Set up environment variables in Vercel:**
+   - Go to your Vercel project settings
+   - Navigate to "Environment Variables"
+   - Add the following variables:
+
+   ```bash
+   # Required
+   AUTH_SECRET=your-secret-key-here
+   DATABASE_URL=your-database-url-here
+   
+   # Optional (for Discord auth)
+   AUTH_DISCORD_ID=your-discord-client-id
+   AUTH_DISCORD_SECRET=your-discord-client-secret
+   ```
+
+2. **Generate AUTH_SECRET:**
+   ```bash
+   openssl rand -base64 32
+   ```
+
+3. **Database Setup:**
+   - For production, use a PostgreSQL database (recommended: [Neon](https://neon.tech), [PlanetScale](https://planetscale.com), or [Supabase](https://supabase.com))
+   - Update your `DATABASE_URL` in Vercel environment variables
+
+4. **Deploy:**
+   ```bash
+   # Push to GitHub (if not already done)
+   git push origin main
+   
+   # Connect to Vercel and deploy
+   # Vercel will automatically deploy from your GitHub repository
+   ```
+
+### Environment Variables
+
+Create a `.env.local` file with the following variables:
+
+```bash
+# Database
+DATABASE_URL="file:./dev.db"
+
+# Auth
+AUTH_SECRET="your-auth-secret-here"
+AUTH_DISCORD_ID="your-discord-client-id"
+AUTH_DISCORD_SECRET="your-discord-client-secret"
+```
+
+## 📁 Project Structure
+
+```
+src/
+├── components/          # Reusable UI components
+│   ├── layout/         # Layout components (Navigation, Layout)
+│   └── ui/            # Base UI components (Button, Card, etc.)
+├── pages/             # Next.js pages
+│   ├── songs/         # Songs management pages
+│   └── rounds/        # Performance rounds pages
+├── server/           # Backend logic
+│   ├── api/          # tRPC routers
+│   └── auth/         # Authentication config
+└── styles/           # Global styles and animations
+```
+
+## 🎨 Design Features
+
+- **Glassmorphism Effects**: Modern frosted glass appearance
+- **Gradient Backgrounds**: Beautiful color transitions
+- **Smooth Animations**: Hover effects, scaling, and rotation
+- **Modern Shadows**: Layered shadow system for depth
+- **Responsive Design**: Mobile-first approach
+- **Dark Mode Support**: Enhanced color schemes
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built with [T3 Stack](https://create.t3.gg/)
+- Icons by [Lucide](https://lucide.dev/)
+- Styling with [Tailwind CSS](https://tailwindcss.com/)
