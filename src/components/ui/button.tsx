@@ -27,7 +27,7 @@ const buttonVariants = cva(
   }
 );
 
-export function Button({ className, variant, size, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "default" | "outline" | "ghost"; size?: "default" | "sm" | "lg" }) {
+export function Button({ className, variant = "default", size = "default", ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "default" | "outline" | "ghost"; size?: "default" | "sm" | "lg" }) {
   return (
     <button className={cn(buttonVariants({ variant, size }), className)} {...props} />
   );
