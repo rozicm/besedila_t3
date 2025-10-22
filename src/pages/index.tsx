@@ -1,7 +1,7 @@
 import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
 import Link from "next/link";
-import { Music, Users, Star, Search, Plus, Play, Eye, X } from "lucide-react";
+import { Music, Users, Star, Plus, Play, Eye, X, LogIn, User, BarChart3, Calendar, Heart } from "lucide-react";
 
 import { api } from "~/utils/api";
 import { Button } from "~/components/ui/button";
@@ -19,359 +19,323 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Besedila - Music Management</title>
-        <meta name="description" content="Manage your music collection and performances" />
+        <title>Besedila - Upravljanje glasbe</title>
+        <meta name="description" content="Upravljajte svojo glasbeno zbirko in nastope" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       
       {/* Hero Section */}
-      <div className="relative overflow-hidden min-h-[85vh] flex items-center">
-        {/* Animated background */}
-        <div className="absolute inset-0 bg-animated-gradient-slow" />
-        <div className="absolute inset-0 bg-black/30" />
+      <div className="relative bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen flex items-center">
+        {/* Subtle background pattern */}
+        <div className="absolute inset-0 bg-grid-pattern opacity-5" />
         
-        {/* Floating elements */}
-        <div className="absolute top-20 left-10 w-24 h-24 bg-white/15 rounded-full blur-2xl float-slow" style={{ animationDelay: '0s' }} />
-        <div className="absolute top-40 right-20 w-40 h-40 bg-purple-500/25 rounded-full blur-3xl float" style={{ animationDelay: '2s' }} />
-        <div className="absolute bottom-20 left-1/4 w-20 h-20 bg-pink-500/25 rounded-full blur-xl float-fast" style={{ animationDelay: '4s' }} />
-        <div className="absolute top-1/2 right-1/3 w-16 h-16 bg-blue-500/20 rounded-full blur-lg float" style={{ animationDelay: '6s' }} />
-        
-        {/* Enhanced pattern overlay */}
-        <div className="absolute inset-0 bg-hexagon-pattern opacity-5" />
-        <div className="absolute inset-0 bg-grid-pattern opacity-10" />
-        
-        <div className="relative z-10 mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="relative z-10 mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8">
           <div className="text-center">
-            {/* Main heading with stunning gradient */}
-            <h1 className="text-6xl font-black tracking-tight sm:text-8xl lg:text-9xl">
-              <span className="block text-white mb-6 text-shadow-lg">Welcome to</span>
-              <span className="block text-gradient text-7xl sm:text-9xl lg:text-[10rem] font-black animate-fade-in">
+            {/* Main heading */}
+            <h1 className="text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl mb-8">
+              Dobrodošli v
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mt-2">
                 Besedila
               </span>
             </h1>
             
-            {/* Subtitle with enhanced glassmorphism */}
-            <div className="mt-12 mx-auto max-w-4xl">
-              <div className="glass-strong rounded-3xl p-10 backdrop-blur-2xl border border-white/30 shadow-modern-xl">
-                <p className="text-2xl leading-relaxed text-white/95 font-semibold text-shadow">
-                  Manage your music collection, organize performances, and create beautiful songbooks. 
-                  Everything you need for your musical journey in one place.
-                </p>
-                <div className="mt-6 flex items-center justify-center space-x-8 text-white/80">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-gradient-accent rounded-full animate-pulse"></div>
-                    <span className="text-sm font-medium">Professional</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-gradient-warm rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-                    <span className="text-sm font-medium">Modern</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-gradient-success rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
-                    <span className="text-sm font-medium">Intuitive</span>
-                  </div>
-                </div>
-              </div>
+            {/* Subtitle */}
+            <div className="mt-8 mx-auto max-w-3xl">
+              <p className="text-xl text-gray-300 leading-relaxed mb-8">
+                Upravljajte svojo glasbeno zbirko, organizirajte nastope in ustvarjajte lepe pesmarice. 
+                Vse, kar potrebujete za svojo glasbeno potovanje na enem mestu.
+              </p>
             </div>
             
-            {/* CTA Buttons with enhanced modern design */}
-            <div className="mt-16 flex flex-col sm:flex-row items-center justify-center gap-8">
+            {/* CTA Buttons */}
+            <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6">
               <Button 
                 asChild 
-                size="xl" 
-                className="group bg-gradient-primary hover:scale-110 transition-all duration-500 shadow-modern-xl px-12 py-6 text-xl font-bold glow-primary"
+                size="lg" 
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 <Link href="/songs" className="flex items-center">
-                  <Music className="mr-4 h-7 w-7 group-hover:rotate-12 transition-transform duration-300" />
-                  Browse Songs
+                  <Music className="mr-3 h-5 w-5" />
+                  Preglej pesmi
                 </Link>
               </Button>
               <Button 
-                variant="glass" 
-                size="xl" 
+                variant="outline" 
+                size="lg" 
                 asChild
-                className="group glass-strong border-white text-white hover:bg-white/20 hover:scale-110 transition-all duration-500 px-12 py-6 text-xl font-bold shadow-modern-xl"
+                className="border-white/30 text-white hover:bg-white/10 px-8 py-4 text-lg font-semibold transition-all duration-300"
               >
                 <Link href="/rounds" className="flex items-center">
-                  <Users className="mr-4 h-7 w-7 group-hover:rotate-12 transition-transform duration-300" />
-                  View Rounds
+                  <Users className="mr-3 h-5 w-5" />
+                  Preglej runde
                 </Link>
               </Button>
-            </div>
-            
-            {/* Scroll indicator */}
-            <div className="mt-20 flex flex-col items-center">
-              <div className="text-white/60 text-sm font-medium mb-4">Scroll to explore</div>
-              <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
-                <div className="w-1 h-3 bg-white/60 rounded-full mt-2 animate-bounce"></div>
-              </div>
+              {!sessionData && (
+                <Button 
+                  variant="secondary" 
+                  size="lg" 
+                  onClick={() => void signIn("discord")}
+                  className="bg-white text-gray-900 hover:bg-gray-100 px-8 py-4 text-lg font-semibold transition-all duration-300"
+                >
+                  <LogIn className="mr-3 h-5 w-5" />
+                  Prijavi se z Discord
+                </Button>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-4">Your Music Dashboard</h2>
-          <p className="text-muted-foreground text-lg">Track your musical journey at a glance</p>
-        </div>
-        
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="group card-hover bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/20 dark:to-indigo-950/20 border-0 shadow-modern animate-fade-in">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-semibold text-blue-700 dark:text-blue-300">Total Songs</CardTitle>
-              <div className="p-2 bg-gradient-primary rounded-lg">
-                <Music className="h-5 w-5 text-white" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
-                {songsQuery.data?.length || 0}
-              </div>
-              <p className="text-sm text-blue-600/70 dark:text-blue-400/70">
-                {songsQuery.data?.filter(s => s.favorite).length || 0} favorites
-              </p>
-            </CardContent>
-          </Card>
+      {/* Stats Section */}
+      <div className="bg-white py-20">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Vaša glasbena nadzorna plošča</h2>
+            <p className="text-gray-600 text-lg">Spremljajte svojo glasbeno potovanje na prvi pogled</p>
+          </div>
           
-          <Card className="group card-hover bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950/20 dark:to-pink-950/20 border-0 shadow-modern animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-semibold text-purple-700 dark:text-purple-300">Active Rounds</CardTitle>
-              <div className="p-2 bg-gradient-secondary rounded-lg">
-                <Users className="h-5 w-5 text-white" />
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <Card className="text-center p-6 hover:shadow-lg transition-shadow duration-300">
+              <div className="mx-auto w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                <Music className="h-6 w-6 text-blue-600" />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                {songsQuery.data?.length || 0}
+              </h3>
+              <p className="text-gray-600 mb-1">Skupaj pesmi</p>
+              <p className="text-sm text-blue-600">
+                {songsQuery.data?.filter(s => s.favorite).length || 0} priljubljenih
+              </p>
+            </Card>
+            
+            <Card className="text-center p-6 hover:shadow-lg transition-shadow duration-300">
+              <div className="mx-auto w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                <Users className="h-6 w-6 text-purple-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
                 {roundsQuery.data?.length || 0}
-              </div>
-              <p className="text-sm text-purple-600/70 dark:text-purple-400/70">
-                Performance rounds
+              </h3>
+              <p className="text-gray-600 mb-1">Aktivne runde</p>
+              <p className="text-sm text-purple-600">
+                Runde za nastop
               </p>
-            </CardContent>
-          </Card>
+            </Card>
 
-          <Card className="group card-hover bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-950/20 dark:to-teal-950/20 border-0 shadow-modern animate-fade-in" style={{ animationDelay: "0.2s" }}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Genres</CardTitle>
-              <div className="p-2 bg-gradient-accent rounded-lg">
-                <Star className="h-5 w-5 text-white" />
+            <Card className="text-center p-6 hover:shadow-lg transition-shadow duration-300">
+              <div className="mx-auto w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                <Star className="h-6 w-6 text-green-600" />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
                 {new Set(songsQuery.data?.map(s => s.genre)).size || 0}
-              </div>
-              <p className="text-sm text-emerald-600/70 dark:text-emerald-400/70">
-                Different styles
+              </h3>
+              <p className="text-gray-600 mb-1">Žanri</p>
+              <p className="text-sm text-green-600">
+                Različni slogi
               </p>
-            </CardContent>
-          </Card>
+            </Card>
 
-          <Card className="group card-hover bg-gradient-to-br from-orange-50 to-red-100 dark:from-orange-950/20 dark:to-red-950/20 border-0 shadow-modern animate-fade-in" style={{ animationDelay: "0.3s" }}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-semibold text-orange-700 dark:text-orange-300">Quick Actions</CardTitle>
-              <div className="p-2 bg-gradient-warm rounded-lg">
-                <Plus className="h-5 w-5 text-white" />
+            <Card className="text-center p-6 hover:shadow-lg transition-shadow duration-300">
+              <div className="mx-auto w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                <Plus className="h-6 w-6 text-orange-600" />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1">+</div>
-              <p className="text-sm text-orange-600/70 dark:text-orange-400/70">
-                Add new content
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">+</h3>
+              <p className="text-gray-600 mb-1">Hitre akcije</p>
+              <p className="text-sm text-orange-600">
+                Dodaj novo vsebino
               </p>
-            </CardContent>
-          </Card>
+            </Card>
+          </div>
         </div>
       </div>
 
       {/* Recent Content */}
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-4">Recent Activity</h2>
-          <p className="text-muted-foreground text-lg">Your latest musical creations and performances</p>
-        </div>
-        
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          {/* Recent Songs */}
-          <Card className="group card-hover bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900/50 dark:to-gray-900/50 border-0 shadow-modern">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-gradient-primary rounded-lg">
-                    <Music className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl font-bold">Recent Songs</CardTitle>
-                    <CardDescription className="text-muted-foreground">Your latest additions to the collection</CardDescription>
-                  </div>
-                </div>
-                <Button variant="outline" size="sm" asChild className="group-hover:scale-105 transition-transform duration-200">
-                  <Link href="/songs" className="flex items-center">
-                    View All
-                    <Play className="ml-1 h-3 w-3" />
-                  </Link>
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {songsQuery.isLoading ? (
-                <div className="space-y-4">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="flex items-center space-x-3 p-3">
-                      <div className="h-10 w-10 animate-pulse rounded-full bg-muted" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 animate-pulse rounded bg-muted w-3/4" />
-                        <div className="h-3 animate-pulse rounded bg-muted w-1/2" />
-                      </div>
+      <div className="bg-gray-50 py-20">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Nedavna dejavnost</h2>
+            <p className="text-gray-600 text-lg">Vaše najnovejše glasbene ustvarjanje in nastopi</p>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+            {/* Recent Songs */}
+            <Card className="bg-white shadow-lg">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Music className="h-5 w-5 text-blue-600" />
                     </div>
-                  ))}
+                    <div>
+                      <CardTitle className="text-xl font-bold text-gray-900">Nedavne pesmi</CardTitle>
+                      <CardDescription className="text-gray-600">Vaše najnovejše dodatke v zbirko</CardDescription>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/songs" className="flex items-center">
+                      Poglej vse
+                      <Play className="ml-1 h-3 w-3" />
+                    </Link>
+                  </Button>
                 </div>
-              ) : recentSongs.length > 0 ? (
-                <div className="space-y-3">
-                  {recentSongs.map((song, index) => (
-                    <div 
-                      key={song.id} 
-                      className="group/song flex items-center justify-between rounded-xl p-4 bg-white/50 dark:bg-slate-800/50 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-300 border border-white/20 dark:border-slate-700/50 animate-slide-in-left"
-                      style={{ animationDelay: `${index * 0.1}s` }}
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-primary shadow-lg group-hover/song:scale-110 transition-transform duration-300">
-                          <Music className="h-6 w-6 text-white" />
+              </CardHeader>
+              <CardContent>
+                {songsQuery.isLoading ? (
+                  <div className="space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="flex items-center space-x-3 p-3">
+                        <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 animate-pulse rounded bg-gray-200 w-3/4" />
+                          <div className="h-3 animate-pulse rounded bg-gray-200 w-1/2" />
                         </div>
-                        <div>
-                          <p className="font-semibold text-foreground group-hover/song:text-primary transition-colors duration-200">
-                            {song.title}
-                          </p>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Badge variant="outline" className="text-xs bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 border-blue-200 dark:border-blue-700">
-                              {song.genre}
-                            </Badge>
-                            {song.favorite && (
-                              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 animate-pulse" />
-                            )}
+                      </div>
+                    ))}
+                  </div>
+                ) : recentSongs.length > 0 ? (
+                  <div className="space-y-3">
+                    {recentSongs.map((song) => (
+                      <div 
+                        key={song.id} 
+                        className="flex items-center justify-between rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+                            <Music className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900">
+                              {song.title}
+                            </p>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <Badge variant="outline" className="text-xs">
+                                {song.genre}
+                              </Badge>
+                              {song.favorite && (
+                                <Heart className="h-3 w-3 fill-red-500 text-red-500" />
+                              )}
+                            </div>
                           </div>
                         </div>
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link href={`/songs/${song.id}`} className="flex items-center">
+                            <Eye className="h-3 w-3 mr-1" />
+                            Poglej
+                          </Link>
+                        </Button>
                       </div>
-                      <Button variant="ghost" size="sm" asChild className="opacity-0 group-hover/song:opacity-100 transition-all duration-300 hover:scale-110">
-                        <Link href={`/songs/${song.id}`} className="flex items-center">
-                          <Eye className="h-3 w-3 mr-1" />
-                          View
-                        </Link>
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="mx-auto w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mb-4">
-                    <Music className="h-8 w-8 text-white" />
+                    ))}
                   </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">No songs yet</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Start building your music collection</p>
-                  <Button className="bg-gradient-primary hover:scale-105 transition-transform duration-200" asChild>
-                    <Link href="/songs" className="flex items-center">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add your first song
-                    </Link>
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                      <Music className="h-8 w-8 text-blue-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Še ni pesmi</h3>
+                    <p className="text-sm text-gray-600 mb-4">Začnite graditi svojo glasbeno zbirko</p>
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white" asChild>
+                      <Link href="/songs" className="flex items-center">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Dodaj prvo pesem
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-          {/* Recent Rounds */}
-          <Card className="group card-hover bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900/50 dark:to-gray-900/50 border-0 shadow-modern">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-gradient-secondary rounded-lg">
-                    <Users className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl font-bold">Recent Rounds</CardTitle>
-                    <CardDescription className="text-muted-foreground">Your latest performance rounds</CardDescription>
-                  </div>
-                </div>
-                <Button variant="outline" size="sm" asChild className="group-hover:scale-105 transition-transform duration-200">
-                  <Link href="/rounds" className="flex items-center">
-                    View All
-                    <Play className="ml-1 h-3 w-3" />
-                  </Link>
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {roundsQuery.isLoading ? (
-                <div className="space-y-4">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="flex items-center space-x-3 p-3">
-                      <div className="h-10 w-10 animate-pulse rounded-full bg-muted" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 animate-pulse rounded bg-muted w-3/4" />
-                        <div className="h-3 animate-pulse rounded bg-muted w-1/2" />
-                      </div>
+            {/* Recent Rounds */}
+            <Card className="bg-white shadow-lg">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <Users className="h-5 w-5 text-purple-600" />
                     </div>
-                  ))}
-                </div>
-              ) : recentRounds.length > 0 ? (
-                <div className="space-y-3">
-                  {recentRounds.map((round, index) => (
-                    <div 
-                      key={round.id} 
-                      className="group/round flex items-center justify-between rounded-xl p-4 bg-white/50 dark:bg-slate-800/50 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-300 border border-white/20 dark:border-slate-700/50 animate-slide-in-right"
-                      style={{ animationDelay: `${index * 0.1}s` }}
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-secondary shadow-lg group-hover/round:scale-110 transition-transform duration-300">
-                          <Users className="h-6 w-6 text-white" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-foreground group-hover/round:text-primary transition-colors duration-200">
-                            {round.name}
-                          </p>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Performance round
-                          </p>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="sm" asChild className="opacity-0 group-hover/round:opacity-100 transition-all duration-300 hover:scale-110">
-                        <Link href={`/rounds/${round.id}`} className="flex items-center">
-                          <Eye className="h-3 w-3 mr-1" />
-                          View
-                        </Link>
-                      </Button>
+                    <div>
+                      <CardTitle className="text-xl font-bold text-gray-900">Nedavne runde</CardTitle>
+                      <CardDescription className="text-gray-600">Vaši najnovejše runde za nastop</CardDescription>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="mx-auto w-16 h-16 bg-gradient-secondary rounded-full flex items-center justify-center mb-4">
-                    <Users className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">No rounds yet</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Create your first performance round</p>
-                  <Button className="bg-gradient-secondary hover:scale-105 transition-transform duration-200" asChild>
+                  <Button variant="outline" size="sm" asChild>
                     <Link href="/rounds" className="flex items-center">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Create your first round
+                      Poglej vse
+                      <Play className="ml-1 h-3 w-3" />
                     </Link>
                   </Button>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent>
+                {roundsQuery.isLoading ? (
+                  <div className="space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="flex items-center space-x-3 p-3">
+                        <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 animate-pulse rounded bg-gray-200 w-3/4" />
+                          <div className="h-3 animate-pulse rounded bg-gray-200 w-1/2" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : recentRounds.length > 0 ? (
+                  <div className="space-y-3">
+                    {recentRounds.map((round) => (
+                      <div 
+                        key={round.id} 
+                        className="flex items-center justify-between rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
+                            <Users className="h-5 w-5 text-purple-600" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900">
+                              {round.name}
+                            </p>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Nastopni krog
+                            </p>
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link href={`/rounds/${round.id}`} className="flex items-center">
+                            <Eye className="h-3 w-3 mr-1" />
+                            Poglej
+                          </Link>
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="mx-auto w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+                      <Users className="h-8 w-8 text-purple-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Še ni krogov</h3>
+                    <p className="text-sm text-gray-600 mb-4">Ustvarite svoj prvi nastopni krog</p>
+                    <Button className="bg-purple-600 hover:bg-purple-700 text-white" asChild>
+                      <Link href="/rounds" className="flex items-center">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Ustvari prvi krog
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
 
       {/* Auth Section */}
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <Card className="group card-hover bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-indigo-950/20 dark:via-purple-950/20 dark:to-pink-950/20 border-0 shadow-modern-lg">
-          <CardContent className="pt-8 pb-8">
-            <AuthShowcase />
-          </CardContent>
-        </Card>
+      <div className="bg-white py-20">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-0 shadow-xl">
+            <CardContent className="pt-12 pb-12">
+              <AuthShowcase />
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </>
   );
@@ -388,54 +352,62 @@ function AuthShowcase() {
   return (
     <div className="flex flex-col items-center justify-center gap-8">
       <div className="text-center">
-        <div className="mx-auto w-20 h-20 bg-gradient-primary rounded-full flex items-center justify-center mb-6 shadow-lg">
+        <div className="mx-auto w-20 h-20 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center mb-6 shadow-lg">
           {sessionData ? (
-            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-              <span className="text-2xl font-bold text-gradient">👤</span>
+            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center overflow-hidden">
+              {sessionData.user?.image ? (
+                <img 
+                  src={sessionData.user.image} 
+                  alt={sessionData.user.name || "Uporabnik"} 
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <User className="h-6 w-6 text-purple-600" />
+              )}
             </div>
           ) : (
             <Music className="h-10 w-10 text-white" />
           )}
         </div>
         
-        <h3 className="text-2xl font-bold text-foreground mb-3">
-          {sessionData ? `Welcome back, ${sessionData.user?.name}!` : "Ready to Get Started?"}
+        <h3 className="text-2xl font-bold text-gray-900 mb-3">
+          {sessionData ? `Dobrodošli nazaj, ${sessionData.user?.name}!` : "Pripravljeni za začetek?"}
         </h3>
         
-        <p className="text-lg text-muted-foreground max-w-md">
+        <p className="text-lg text-gray-600 max-w-md">
           {sessionData 
             ? secretMessage 
-              ? `Your secret: ${secretMessage}` 
-              : "You're all set to manage your music collection and create amazing performances!"
-            : "Sign in to access all features and start building your musical journey with us."
+              ? `Vaša skrivnost: ${secretMessage}` 
+              : "Vse je pripravljeno za upravljanje vaše glasbene zbirke in ustvarjanje neverjetnih nastopov!"
+            : "Prijavite se z Discord, da dostopate do vseh funkcij in začnete graditi svojo glasbeno potovanje z nami."
           }
         </p>
       </div>
       
-      <Button
-        onClick={sessionData ? () => void signOut() : () => void signIn()}
-        variant={sessionData ? "outline" : "default"}
-        size="lg"
-        className={`group px-8 py-4 text-lg font-semibold transition-all duration-300 hover:scale-105 ${
-          sessionData 
-            ? "glass border-white/30 text-foreground hover:bg-white/10" 
-            : "bg-gradient-primary shadow-modern-lg"
-        }`}
-      >
-        <span className="flex items-center">
-          {sessionData ? (
-            <>
-              <X className="mr-2 h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
-              Sign out
-            </>
-          ) : (
-            <>
-              <Music className="mr-2 h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
-              Sign in to continue
-            </>
-          )}
-        </span>
-      </Button>
+      <div className="flex flex-col sm:flex-row items-center gap-4">
+        {sessionData ? (
+          <Button
+            onClick={() => void signOut()}
+            variant="outline"
+            size="lg"
+            className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-4 text-lg font-semibold transition-all duration-300"
+          >
+            <X className="mr-2 h-5 w-5" />
+            Odjavi se
+          </Button>
+        ) : (
+          <Button
+            onClick={() => void signIn("discord")}
+            size="lg"
+            className="bg-gradient-to-r from-[#5865F2] to-[#4752C4] hover:from-[#4752C4] hover:to-[#3C45A5] text-white shadow-lg px-8 py-4 text-lg font-semibold transition-all duration-300"
+          >
+            <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
+            </svg>
+            Prijavi se z Discord
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

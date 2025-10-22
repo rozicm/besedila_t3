@@ -1,7 +1,3 @@
-export function GET() {
-  return new Response("Auth not configured", { status: 404 });
-}
+import { handlers } from "~/server/auth";
 
-export function POST() {
-  return new Response("Auth not configured", { status: 404 });
-}
+export const { GET, POST } = handlers;
