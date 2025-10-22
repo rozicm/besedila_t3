@@ -25,62 +25,86 @@ export default function Home() {
       </Head>
       
       {/* Hero Section */}
-      <div className="relative overflow-hidden min-h-[80vh] flex items-center">
+      <div className="relative overflow-hidden min-h-[85vh] flex items-center">
         {/* Animated background */}
-        <div className="absolute inset-0 bg-animated-gradient" />
-        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute inset-0 bg-animated-gradient-slow" />
+        <div className="absolute inset-0 bg-black/30" />
         
         {/* Floating elements */}
-        <div className="absolute top-20 left-10 w-20 h-20 bg-white/10 rounded-full blur-xl float" style={{ animationDelay: '0s' }} />
-        <div className="absolute top-40 right-20 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl float" style={{ animationDelay: '2s' }} />
-        <div className="absolute bottom-20 left-1/4 w-16 h-16 bg-pink-500/20 rounded-full blur-lg float" style={{ animationDelay: '4s' }} />
+        <div className="absolute top-20 left-10 w-24 h-24 bg-white/15 rounded-full blur-2xl float-slow" style={{ animationDelay: '0s' }} />
+        <div className="absolute top-40 right-20 w-40 h-40 bg-purple-500/25 rounded-full blur-3xl float" style={{ animationDelay: '2s' }} />
+        <div className="absolute bottom-20 left-1/4 w-20 h-20 bg-pink-500/25 rounded-full blur-xl float-fast" style={{ animationDelay: '4s' }} />
+        <div className="absolute top-1/2 right-1/3 w-16 h-16 bg-blue-500/20 rounded-full blur-lg float" style={{ animationDelay: '6s' }} />
         
-        {/* Grid pattern overlay */}
+        {/* Enhanced pattern overlay */}
+        <div className="absolute inset-0 bg-hexagon-pattern opacity-5" />
         <div className="absolute inset-0 bg-grid-pattern opacity-10" />
         
         <div className="relative z-10 mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <div className="text-center">
             {/* Main heading with stunning gradient */}
-            <h1 className="text-5xl font-bold tracking-tight sm:text-7xl lg:text-8xl">
-              <span className="block text-white mb-4">Welcome to</span>
-              <span className="block text-gradient text-6xl sm:text-8xl lg:text-9xl font-black">
+            <h1 className="text-6xl font-black tracking-tight sm:text-8xl lg:text-9xl">
+              <span className="block text-white mb-6 text-shadow-lg">Welcome to</span>
+              <span className="block text-gradient text-7xl sm:text-9xl lg:text-[10rem] font-black animate-fade-in">
                 Besedila
               </span>
             </h1>
             
-            {/* Subtitle with glassmorphism */}
-            <div className="mt-8 mx-auto max-w-3xl">
-              <div className="glass rounded-2xl p-8 backdrop-blur-xl">
-                <p className="text-xl leading-relaxed text-white/90 font-medium">
+            {/* Subtitle with enhanced glassmorphism */}
+            <div className="mt-12 mx-auto max-w-4xl">
+              <div className="glass-strong rounded-3xl p-10 backdrop-blur-2xl border border-white/30 shadow-modern-xl">
+                <p className="text-2xl leading-relaxed text-white/95 font-semibold text-shadow">
                   Manage your music collection, organize performances, and create beautiful songbooks. 
                   Everything you need for your musical journey in one place.
                 </p>
+                <div className="mt-6 flex items-center justify-center space-x-8 text-white/80">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-gradient-accent rounded-full animate-pulse"></div>
+                    <span className="text-sm font-medium">Professional</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-gradient-warm rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+                    <span className="text-sm font-medium">Modern</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-gradient-success rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+                    <span className="text-sm font-medium">Intuitive</span>
+                  </div>
+                </div>
               </div>
             </div>
             
-            {/* CTA Buttons with modern design */}
-            <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6">
+            {/* CTA Buttons with enhanced modern design */}
+            <div className="mt-16 flex flex-col sm:flex-row items-center justify-center gap-8">
               <Button 
                 asChild 
-                size="lg" 
-                className="group bg-gradient-primary hover:scale-105 transition-all duration-300 shadow-modern-lg px-8 py-4 text-lg font-semibold"
+                size="xl" 
+                className="group bg-gradient-primary hover:scale-110 transition-all duration-500 shadow-modern-xl px-12 py-6 text-xl font-bold glow-primary"
               >
                 <Link href="/songs" className="flex items-center">
-                  <Music className="mr-3 h-6 w-6 group-hover:rotate-12 transition-transform duration-300" />
+                  <Music className="mr-4 h-7 w-7 group-hover:rotate-12 transition-transform duration-300" />
                   Browse Songs
                 </Link>
               </Button>
               <Button 
-                variant="outline" 
-                size="lg" 
+                variant="glass" 
+                size="xl" 
                 asChild
-                className="group glass border-white/30 text-white hover:bg-white/10 hover:scale-105 transition-all duration-300 px-8 py-4 text-lg font-semibold"
+                className="group glass-strong border-white text-white hover:bg-white/20 hover:scale-110 transition-all duration-500 px-12 py-6 text-xl font-bold shadow-modern-xl"
               >
                 <Link href="/rounds" className="flex items-center">
-                  <Users className="mr-3 h-6 w-6 group-hover:rotate-12 transition-transform duration-300" />
+                  <Users className="mr-4 h-7 w-7 group-hover:rotate-12 transition-transform duration-300" />
                   View Rounds
                 </Link>
               </Button>
+            </div>
+            
+            {/* Scroll indicator */}
+            <div className="mt-20 flex flex-col items-center">
+              <div className="text-white/60 text-sm font-medium mb-4">Scroll to explore</div>
+              <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
+                <div className="w-1 h-3 bg-white/60 rounded-full mt-2 animate-bounce"></div>
+              </div>
             </div>
           </div>
         </div>
