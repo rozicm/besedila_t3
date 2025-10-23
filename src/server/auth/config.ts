@@ -41,7 +41,10 @@ const ALLOWED_EMAILS = [
 
 export const authConfig: NextAuthConfig = {
   providers: [
-    DiscordProvider,
+    DiscordProvider({
+      clientId: env.AUTH_DISCORD_ID,
+      clientSecret: env.AUTH_DISCORD_SECRET,
+    }),
   ],
   adapter: PrismaAdapter(db),
   callbacks: {
