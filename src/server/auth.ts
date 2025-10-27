@@ -12,12 +12,13 @@ declare module "next-auth" {
   }
 }
 
+// Create auth config - adapter will only be used at runtime, not during build
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma) as any,
   providers: [
     Discord({
-      clientId: env.AUTH_DISCORD_ID,
-      clientSecret: env.AUTH_DISCORD_SECRET,
+      clientId: env.AUTH_DISCORD_ID || "dummy",
+      clientSecret: env.AUTH_DISCORD_SECRET || "dummy",
     }),
   ],
   callbacks: {
