@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum AccordionTuning {
+  C_F_B
+  B_Es_As
+  A_D_G
+}
+
+enum Instrument {
+  BAS
+  BARITON
+  OTHER
+}
+
+model Song {
+  id            Int            @id @default(autoincrement())
+  title         String
+  lyrics        String
+  genre         String
+  key           String?
+  notes         String?
+  favorite      Boolean        @default(false)
+  harmonica     String?
+  accordionTuning AccordionTuning? @map("accordion_tuning")
+  instrument    Instrument?    @map("instrument")
+  bas_bariton   String?        @map("bas_bariton") // deprecated compat column kept if needed
+
+  roundItems    RoundItem[]
+
+  createdAt     DateTime       @map("inserted_at") @default(now())
+  updatedAt     DateTime       @map("updated_at") @updatedAt
+
+  @@index([title])
+  @@index([genre])
+  @@map("songs")
+}
+
+model Round {
+  id          Int         @id @default(autoincrement())
+  name        String
+  description String?
+
+  roundItems  RoundItem[]
+
+  createdAt   DateTime    @map("inserted_at") @default(now())
+  updatedAt   DateTime    @map("updated_at") @updatedAt
+
+  @@index([name])
+  @@map("rounds")
+}
+
+model RoundItem {
+  id        Int     @id @default(autoincrement())
+  position  Int     @default(0)
+
+  roundId   Int     @map("round_id")
+  songId    Int     @map("song_id")
+
+  round     Round   @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  song      Song    @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @map("inserted_at") @default(now())
+  updatedAt DateTime @map("updated_at") @updatedAt
+
+  @@index([roundId, position])
+  @@index([songId])
+  @@map("round_items")
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdBy   User   @relation(fields: [createdById], references: [id])
+  createdById String
+
+  @@index([name])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  posts         Post[]
+
+  @@map("users")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+
