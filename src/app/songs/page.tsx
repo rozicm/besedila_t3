@@ -11,7 +11,7 @@ import { Modal } from "~/components/ui/modal";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Textarea } from "~/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import { Plus, Edit, Trash2, Star, Search } from "lucide-react";
+import { Plus, Edit, Trash2, Star, Search, Download } from "lucide-react";
 
 const ACCORDION_TUNINGS = [
   { value: "C-F-B", label: "C-F-B" },
@@ -275,6 +275,30 @@ function SongFormModal({
     harmonica: "",
     bas_bariton: "",
   });
+  const [isScraping, setIsScraping] = useState(false);
+  const [scrapeError, setScrapeError] = useState<string | null>(null);
+  const [lyricsUrl, setLyricsUrl] = useState("");
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [searchResults, setSearchResults] = useState<Array<{title: string, artist: string, url: string}>>([]);
+
+  const searchSongsQuery = api.songs.searchSongs.useQuery(
+    { query: formData.title },
+    {
+      enabled: false,
+      retry: false,
+    }
+  );
+
+  // Store the target URL for scraping
+  const [targetScrapeUrl, setTargetScrapeUrl] = useState<string>("");
+
+  const scrapeLyricsQuery = api.songs.scrapeLyrics.useQuery(
+    { title: formData.title, url: targetScrapeUrl || undefined },
+    { 
+      enabled: false,
+      retry: false,
+    }
+  );
 
   React.useEffect(() => {
     if (isOpen && editingSong) {
@@ -290,6 +314,9 @@ function SongFormModal({
         harmonica: normalizedHarmonica,
         bas_bariton: normalizedBasBariton,
       });
+      setLyricsUrl("");
+      setShowSearchResults(false);
+      setSearchResults([]);
     } else if (isOpen && !editingSong) {
       setFormData({
         title: "",
@@ -301,6 +328,9 @@ function SongFormModal({
         harmonica: "",
         bas_bariton: "",
       });
+      setLyricsUrl("");
+      setShowSearchResults(false);
+      setSearchResults([]);
     }
   }, [isOpen, editingSong]);
 
@@ -321,6 +351,65 @@ function SongFormModal({
       harmonica: "",
       bas_bariton: "",
     });
+  };
+
+  const handleSearch = async () => {
+    if (!formData.title.trim() && !lyricsUrl.trim()) {
+      setScrapeError("Please enter a title or URL first");
+      return;
+    }
+
+    // If URL is provided, scrape directly
+    if (lyricsUrl.trim()) {
+      await handleDirectScrape();
+      return;
+    }
+
+    setIsScraping(true);
+    setScrapeError(null);
+
+    try {
+      const result = await searchSongsQuery.refetch();
+      if (result.data && result.data.length > 0) {
+        setSearchResults(result.data);
+        setShowSearchResults(true);
+      } else {
+        setScrapeError("No results found");
+      }
+    } catch (error) {
+      setScrapeError(error instanceof Error ? error.message : "Failed to search");
+    } finally {
+      setIsScraping(false);
+    }
+  };
+
+  const handleSelectResult = async (url: string) => {
+    setShowSearchResults(false);
+    setLyricsUrl(url);
+    await handleDirectScrape(url);
+  };
+
+  const handleDirectScrape = async (url?: string) => {
+    const targetUrl = url || lyricsUrl;
+    if (!targetUrl) return;
+
+    setIsScraping(true);
+    setScrapeError(null);
+
+    try {
+      // Update the target URL and refetch
+      setTargetScrapeUrl(targetUrl);
+      await new Promise(resolve => setTimeout(resolve, 100)); // Wait for state update
+      const result = await scrapeLyricsQuery.refetch();
+      if (result.data?.lyrics) {
+        setFormData({ ...formData, lyrics: result.data.lyrics });
+        setScrapeError(null);
+      }
+    } catch (error) {
+      setScrapeError(error instanceof Error ? error.message : "Failed to scrape lyrics");
+    } finally {
+      setIsScraping(false);
+    }
   };
 
   return (
@@ -345,15 +434,65 @@ function SongFormModal({
           <Input
             id="title"
             required
+            placeholder="Song title or artist name"
             value={formData.title}
             onChange={(e) =>
               setFormData({ ...formData, title: e.target.value })
             }
           />
+          <p className="text-xs text-muted-foreground mt-1">
+            Search by song title or artist name. For best results, use exact titles.
+          </p>
         </div>
 
         <div>
           <Label htmlFor="lyrics">Lyrics *</Label>
+          <div className="mb-2">
+            <Label htmlFor="lyricsUrl" className="text-sm text-muted-foreground">
+              Optional: Paste besedilo.si URL to scrape
+            </Label>
+            <Input
+              id="lyricsUrl"
+              type="url"
+              placeholder="https://www.besedilo.si/..."
+              value={lyricsUrl}
+              onChange={(e) => setLyricsUrl(e.target.value)}
+              className="mt-1"
+            />
+          </div>
+          <div className="flex items-center justify-between mb-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleSearch}
+              disabled={isScraping || (!formData.title.trim() && !lyricsUrl.trim())}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              {isScraping ? "Searching..." : "Search on besedilo.si"}
+            </Button>
+          </div>
+          {scrapeError && (
+            <p className="text-sm text-red-500 mb-2">{scrapeError}</p>
+          )}
+          {showSearchResults && searchResults.length > 0 && (
+            <div className="mb-4 border rounded-lg p-3 max-h-60 overflow-y-auto">
+              <p className="text-sm font-medium mb-2">Select a song:</p>
+              <div className="space-y-1">
+                {searchResults.map((result, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleSelectResult(result.url)}
+                    className="w-full text-left p-2 hover:bg-gray-100 rounded text-sm"
+                  >
+                    <div className="font-medium">{result.title}</div>
+                    <div className="text-xs text-gray-500">{result.artist}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <Textarea
             id="lyrics"
             required

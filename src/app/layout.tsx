@@ -6,7 +6,10 @@ import { Nav } from "~/components/layout/nav";
 export const metadata = {
   title: "Band Song Manager",
   description: "Manage your band's songs and setlists",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
+  icons: [
+    { rel: "icon", url: "/Zalet.png", type: "image/png" },
+    { rel: "apple-touch-icon", url: "/Zalet.png" },
+  ],
 };
 
 export default function RootLayout({
@@ -16,6 +19,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="icon" type="image/png" href="/Zalet.png" />
+        <link rel="apple-touch-icon" href="/Zalet.png" />
+      </head>
       <body>
         <ThemeProvider defaultTheme="light">
           <Providers>
