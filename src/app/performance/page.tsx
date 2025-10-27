@@ -240,23 +240,23 @@ export default function PerformancePage() {
             {/* Top bar - hidden if hideTopbar is true */}
             {!hideTopbar && (
               <div className="sticky top-0 bg-background/95 backdrop-blur-sm border-b z-10 animate-in slide-in-from-top">
-                <div className="container mx-auto px-6 py-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-8">
+                <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-4 space-y-3">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 sm:gap-8 w-full sm:w-auto justify-center">
                       <Button
                         onClick={handlePrevious}
                         disabled={currentSongIndex === 0}
                         size="lg"
                         variant="ghost"
-                        className="h-14 text-xl"
+                        className="h-10 sm:h-14 text-base sm:text-xl"
                       >
-                        <ArrowLeft className="mr-2 h-7 w-7" />
-                        Previous
+                        <ArrowLeft className="mr-1 sm:mr-2 h-5 w-5 sm:h-7 sm:w-7" />
+                        <span className="hidden sm:inline">Previous</span>
                       </Button>
 
                       <div className="text-center">
-                        <p className="text-2xl font-semibold">
-                          Song {currentSongIndex + 1} of {performanceData.songs.length}
+                        <p className="text-base sm:text-2xl font-semibold">
+                          {currentSongIndex + 1} / {performanceData.songs.length}
                         </p>
                       </div>
 
@@ -265,24 +265,24 @@ export default function PerformancePage() {
                         disabled={currentSongIndex === performanceData.songs.length - 1}
                         size="lg"
                         variant="ghost"
-                        className="h-14 text-xl"
+                        className="h-10 sm:h-14 text-base sm:text-xl"
                       >
-                        Next
-                        <ArrowRight className="ml-2 h-7 w-7" />
+                        <span className="hidden sm:inline">Next</span>
+                        <ArrowRight className="ml-1 sm:ml-2 h-5 w-5 sm:h-7 sm:w-7" />
                       </Button>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2 px-3 py-1 bg-muted rounded">
+                    <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-center flex-wrap">
+                      <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 bg-muted rounded">
                         <button
                           onClick={() => setFontSize(Math.max(fontSize - 2, 18))}
-                          className="text-xl px-2 hover:bg-background rounded"
+                          className="text-lg sm:text-xl px-1 sm:px-2 hover:bg-background rounded"
                         >
                           A-
                         </button>
                         <button
                           onClick={() => setFontSize(Math.min(fontSize + 2, 36))}
-                          className="text-xl px-2 hover:bg-background rounded"
+                          className="text-lg sm:text-xl px-1 sm:px-2 hover:bg-background rounded"
                         >
                           A+
                         </button>
@@ -290,45 +290,48 @@ export default function PerformancePage() {
                       <Button
                         onClick={() => setShowLyrics(!showLyrics)}
                         variant="secondary"
-                        size="lg"
+                        size="sm"
+                        className="text-xs sm:text-base"
                       >
-                        {showLyrics ? "Hide" : "Show"} Lyrics
+                        {showLyrics ? "Hide" : "Show"}
                       </Button>
                       <Button
                         onClick={() => setHideTopbar(true)}
                         variant="ghost"
-                        size="lg"
+                        size="sm"
+                        className="text-xs sm:text-base"
                         title="Hide (Press H to show again)"
                       >
-                        Hide Bar
+                        <span className="hidden sm:inline">Hide Bar</span>
+                        <span className="sm:hidden">Hide</span>
                       </Button>
                       <Button
                         onClick={() => setFullscreen(false)}
                         variant="ghost"
                         size="icon"
-                        className="h-12 w-12"
+                        className="h-8 w-8 sm:h-12 sm:w-12"
                       >
-                        <X className="h-6 w-6" />
+                        <X className="h-4 w-4 sm:h-6 sm:w-6" />
                       </Button>
                     </div>
                   </div>
 
                   {/* Horizontal scrollbar for song navigation */}
                   {!hideTopbar && (
-                    <div className="w-full overflow-x-auto">
-                      <div className="flex gap-2 pb-2" style={{ width: 'max-content' }}>
+                    <div className="w-full overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+                      <div className="flex gap-1 sm:gap-2 pb-2" style={{ width: 'max-content' }}>
                         {performanceData.songs.map((song, index) => (
                           <button
                             key={song.id}
                             onClick={() => setCurrentSongIndex(index)}
-                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
+                            className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
                               index === currentSongIndex
                                 ? 'bg-primary text-primary-foreground'
                                 : 'bg-muted hover:bg-muted/80'
                             }`}
                           >
-                            {index + 1}. {song.title.substring(0, 30)}
-                            {song.title.length > 30 ? '...' : ''}
+                            {index + 1}. {song.title.substring(0, window.innerWidth < 640 ? 15 : 30)}
+                            {song.title.length > (window.innerWidth < 640 ? 15 : 30) ? '...' : ''}
                           </button>
                         ))}
                       </div>
@@ -340,53 +343,54 @@ export default function PerformancePage() {
 
             {/* Show topbar button when hidden */}
             {hideTopbar && (
-              <div className="sticky top-4 left-4 z-10 w-fit">
+              <div className="sticky top-3 sm:top-4 left-3 sm:left-4 z-10 w-fit">
                 <Button
                   onClick={() => setHideTopbar(false)}
-                  size="lg"
+                  size="sm"
                   variant="secondary"
                   className="shadow-lg"
                 >
-                  Show Controls (H)
+                  <span className="hidden sm:inline">Show Controls (H)</span>
+                  <span className="sm:hidden">Show</span>
                 </Button>
               </div>
             )}
 
             {/* Song content */}
-            <div className={`flex-1 container mx-auto px-6 py-12 ${hideTopbar ? 'pt-20' : ''}`}>
+            <div className={`flex-1 container mx-auto px-3 sm:px-6 py-6 sm:py-12 ${hideTopbar ? 'pt-16 sm:pt-20' : ''}`}>
               <div className="max-w-5xl mx-auto">
-                <h1 className="text-7xl font-bold mb-6 text-center">{currentSong.title}</h1>
-                <p className="text-4xl text-muted-foreground mb-12 text-center">
+                <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-3 sm:mb-6 text-center">{currentSong.title}</h1>
+                <p className="text-xl sm:text-3xl md:text-4xl text-muted-foreground mb-6 sm:mb-12 text-center">
                   {currentSong.roundName}
                 </p>
 
                 {showLyrics && (
-                  <pre className="whitespace-pre-wrap bg-muted/50 p-12 rounded-2xl border-2 font-serif text-center" style={{ fontSize: `${fontSize}px`, lineHeight: '1.8' }}>
+                  <pre className="whitespace-pre-wrap bg-muted/50 p-4 sm:p-8 md:p-12 rounded-2xl border-2 font-serif text-center" style={{ fontSize: `${fontSize}px`, lineHeight: '1.8' }}>
                     {currentSong.lyrics}
                   </pre>
                 )}
 
                 {!hideTopbar && (
-                  <div className="mt-12 flex items-center justify-center gap-12">
+                  <div className="mt-6 sm:mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-12">
                     {previousSong && (
                       <div className="text-center">
-                        <p className="text-lg text-muted-foreground mb-2">Previous</p>
-                        <p className="text-2xl font-medium">{previousSong.title}</p>
+                        <p className="text-sm sm:text-lg text-muted-foreground mb-1 sm:mb-2">Previous</p>
+                        <p className="text-base sm:text-xl md:text-2xl font-medium">{previousSong.title}</p>
                       </div>
                     )}
                     {nextSong && (
                       <div className="text-center">
-                        <p className="text-lg text-muted-foreground mb-2">Next</p>
-                        <p className="text-2xl font-medium">{nextSong.title}</p>
+                        <p className="text-sm sm:text-lg text-muted-foreground mb-1 sm:mb-2">Next</p>
+                        <p className="text-base sm:text-xl md:text-2xl font-medium">{nextSong.title}</p>
                       </div>
                     )}
                   </div>
                 )}
 
                 {!hideTopbar && (
-                  <div className="mt-12 text-center text-lg text-muted-foreground space-y-2">
-                    <p><strong>Keyboard shortcuts:</strong></p>
-                    <p>← / → Navigate • H Hide/Show bar • + / - Font size • ESC Exit</p>
+                  <div className="mt-6 sm:mt-12 text-center text-sm sm:text-lg text-muted-foreground space-y-1 sm:space-y-2 px-2">
+                    <p className="hidden sm:block"><strong>Keyboard shortcuts:</strong></p>
+                    <p className="text-xs sm:text-base hidden sm:block">← / → Navigate • H Hide/Show bar • + / - Font size • ESC Exit</p>
                   </div>
                 )}
               </div>
@@ -398,25 +402,27 @@ export default function PerformancePage() {
 
     // Normal view
     return (
-      <div className="container mx-auto p-8">
-        <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Performance Mode</h1>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => { setSelectedRounds([]); setPerformanceStarted(false); }}>
-              Back to Selection
+      <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <h1 className="text-2xl sm:text-3xl font-bold">Performance Mode</h1>
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+            <Button variant="outline" onClick={() => { setSelectedRounds([]); setPerformanceStarted(false); }} className="flex-1 sm:flex-initial">
+              Back
             </Button>
-            <Button onClick={exportToPDF}>
+            <Button onClick={exportToPDF} className="flex-1 sm:flex-initial">
               <Download className="mr-2 h-4 w-4" />
-              Export PDF
+              <span className="hidden sm:inline">Export PDF</span>
+              <span className="sm:hidden">PDF</span>
             </Button>
-            <Button onClick={() => setFullscreen(true)} variant="secondary">
+            <Button onClick={() => setFullscreen(true)} variant="secondary" className="flex-1 sm:flex-initial">
               <Maximize2 className="mr-2 h-4 w-4" />
-              Full Screen
+              <span className="hidden sm:inline">Full Screen</span>
+              <span className="sm:hidden">Full</span>
             </Button>
           </div>
         </div>
 
-        <div className="mb-6 flex items-center justify-center gap-4">
+        <div className="mb-6 flex items-center justify-center gap-2 sm:gap-4">
           <Button
             onClick={handlePrevious}
             disabled={currentSongIndex === 0}
@@ -424,12 +430,12 @@ export default function PerformancePage() {
             size="lg"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Previous
+            <span className="hidden sm:inline">Previous</span>
           </Button>
 
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
-              Song {currentSongIndex + 1} of {performanceData.songs.length}
+              {currentSongIndex + 1} / {performanceData.songs.length}
             </p>
           </div>
 
@@ -439,34 +445,35 @@ export default function PerformancePage() {
             variant="outline"
             size="lg"
           >
-            Next
+            <span className="hidden sm:inline">Next</span>
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
 
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl">{currentSong.title}</CardTitle>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <CardTitle className="text-xl sm:text-2xl">{currentSong.title}</CardTitle>
               <Button
                 variant="secondary"
                 onClick={() => setShowLyrics(!showLyrics)}
+                className="w-full sm:w-auto"
               >
                 {showLyrics ? "Hide" : "Show"} Lyrics
               </Button>
             </div>
-            <p className="text-muted-foreground">{currentSong.roundName}</p>
+            <p className="text-sm sm:text-base text-muted-foreground">{currentSong.roundName}</p>
           </CardHeader>
           <CardContent>
             {showLyrics && (
-              <pre className="whitespace-pre-wrap text-lg leading-relaxed font-serif">
+              <pre className="whitespace-pre-wrap text-base sm:text-lg leading-relaxed font-serif">
                 {currentSong.lyrics}
               </pre>
             )}
           </CardContent>
         </Card>
 
-        <div className="mt-8 grid grid-cols-2 gap-4">
+        <div className="mt-6 sm:mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           {previousSong && (
             <Card>
               <CardHeader>
