@@ -19,5 +19,8 @@ const handler = async (req: NextRequest) =>
         : undefined,
   });
 
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
+
 export { handler as GET, handler as POST };
 
