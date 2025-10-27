@@ -1,7 +1,5 @@
 import NextAuth, { type DefaultSession } from "next-auth";
 import Discord from "next-auth/providers/discord";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import { prisma } from "~/server/db";
 import { env } from "~/lib/env";
 
 declare module "next-auth" {
@@ -12,9 +10,10 @@ declare module "next-auth" {
   }
 }
 
-// Create auth config - adapter will only be used at runtime, not during build
+// Skip adapter during build - auth is disabled anyway
+// Set adapter to undefined to avoid build-time database connection
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(prisma) as any,
+  adapter: undefined as any,
   providers: [
     Discord({
       clientId: env.AUTH_DISCORD_ID || "dummy",

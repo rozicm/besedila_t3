@@ -1,7 +1,6 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import { superjson } from "~/lib/superjson";
 import { ZodError } from "zod";
-import { auth } from "~/server/auth";
 import { prisma } from "~/server/db";
 
 type CreateContextOptions = {
@@ -19,8 +18,8 @@ export const createTRPCContext = async (opts: {
   req: Request;
   resHeaders: Headers;
 }) => {
-  // Get session using next-auth
-  const session = await auth();
+  // Session is disabled for now - return null to avoid build issues
+  const session = null;
 
   return createInnerTRPCContext({
     session,

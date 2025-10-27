@@ -1,14 +1,28 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { type NextRequest } from "next/server";
-import { appRouter } from "~/server/api/root";
-import { createTRPCContext } from "~/server/api/trpc";
 
-const handler = async (req: NextRequest) =>
-  fetchRequestHandler({
-    endpoint: "/api/trpc",
-    req,
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
+
+// Lazy-load router and context to avoid build-time database connection
+async function getRouterAndContext(req: NextRequest) {
+  const { appRouter } = await import("~/server/api/root");
+  const { createTRPCContext } = await import("~/server/api/trpc");
+  
+  return {
     router: appRouter,
     createContext: () => createTRPCContext({ req, resHeaders: new Headers() }),
+  };
+}
+
+const handler = async (req: NextRequest) => {
+  const { router, createContext } = await getRouterAndContext(req);
+  
+  return fetchRequestHandler({
+    endpoint: "/api/trpc",
+    req,
+    router,
+    createContext,
     onError:
       process.env.NODE_ENV === "development"
         ? ({ path, error }) => {
@@ -18,9 +32,7 @@ const handler = async (req: NextRequest) =>
           }
         : undefined,
   });
-
-// Force dynamic rendering
-export const dynamic = "force-dynamic";
+};
 
 export { handler as GET, handler as POST };
 
