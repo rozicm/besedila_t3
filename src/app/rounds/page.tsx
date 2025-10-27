@@ -153,16 +153,16 @@ export default function RoundsPage() {
   }
 
   return (
-    <div className="container mx-auto p-8">
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Rounds</h1>
-        <Button onClick={() => setIsModalOpen(true)}>
+    <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+      <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold">Rounds</h1>
+        <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           Add New Round
         </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {rounds?.map((round) => (
           <Card key={round.id}>
             <CardHeader>

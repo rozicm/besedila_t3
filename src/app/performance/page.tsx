@@ -15,17 +15,19 @@ export default function PerformancePage() {
   const [fullscreen, setFullscreen] = useState(false);
   const [hideTopbar, setHideTopbar] = useState(false);
   const [fontSize, setFontSize] = useState(24); // Base font size
+  const [performanceStarted, setPerformanceStarted] = useState(false);
 
   const { data: rounds, isLoading: roundsLoading } = api.rounds.list.useQuery();
 
   const { data: performanceData, isLoading: performanceLoading } =
     api.performance.getPerformanceData.useQuery(
       { roundIds: selectedRounds },
-      { enabled: selectedRounds.length > 0 }
+      { enabled: selectedRounds.length > 0 && performanceStarted }
     );
 
   const handleStart = () => {
     if (selectedRounds.length > 0) {
+      setPerformanceStarted(true);
       setCurrentSongIndex(0);
       setShowLyrics(true);
     }
@@ -90,30 +92,142 @@ export default function PerformancePage() {
   };
 
   const exportToPDF = async () => {
-    if (!performanceData) return;
+    if (!performanceData) {
+      alert("No performance data available");
+      return;
+    }
 
-    const printContent = document.getElementById("print-content");
+    try {
+      // Create a new window for printing
+      const printWindow = window.open('', '_blank');
+      
+      if (!printWindow) {
+        alert("Please allow popups to export PDF");
+        return;
+      }
 
-    if (!printContent) return;
+      // Generate the HTML content
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <title>Performance PDF Export</title>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                padding: 40px;
+                color: #000;
+                background: #fff;
+              }
+              .song {
+                margin-bottom: 60px;
+                page-break-inside: avoid;
+                position: relative;
+                min-height: 600px;
+              }
+              .song-title {
+                font-size: 32px;
+                font-weight: bold;
+                margin-bottom: 10px;
+              }
+              .song-round {
+                font-size: 20px;
+                color: #666;
+                margin-bottom: 10px;
+              }
+              .song-info {
+                font-size: 14px;
+                color: #555;
+                margin-bottom: 20px;
+                font-style: italic;
+              }
+              .song-info span {
+                margin-right: 15px;
+              }
+              .song-lyrics {
+                font-size: 18px;
+                line-height: 1.6;
+                white-space: pre-wrap;
+                font-family: Georgia, serif;
+              }
+              .next-song {
+                position: absolute;
+                bottom: 10px;
+                right: 0;
+                text-align: right;
+                font-size: 12px;
+                color: #888;
+                border-top: 1px solid #ddd;
+                padding-top: 10px;
+                width: 40%;
+              }
+              .next-song-title {
+                font-weight: bold;
+                margin-bottom: 5px;
+              }
+              .next-song-info {
+                font-size: 10px;
+                font-style: italic;
+              }
+              .next-song-info span {
+                margin-right: 10px;
+              }
+              @media print {
+                body {
+                  padding: 20px;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            ${performanceData.songs.map((song, index) => {
+              const nextSong = performanceData.songs[index + 1];
+              return `
+              <div class="song">
+                <div class="song-title">${song.title}</div>
+                ${song.roundName ? `<div class="song-round">${song.roundName}</div>` : ''}
+                <div class="song-info">
+                  ${song.key ? `<span>Key: ${song.key}</span>` : ''}
+                  ${song.harmonica ? `<span>Accordion: ${song.harmonica.replace(/_/g, '-').split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join('-')}</span>` : ''}
+                  ${song.bas_bariton ? `<span>${song.bas_bariton}</span>` : ''}
+                </div>
+                <div class="song-lyrics">${song.lyrics}</div>
+                ${nextSong ? `
+                  <div class="next-song">
+                    <div class="next-song-title">Next: ${nextSong.title}</div>
+                    <div class="next-song-info">
+                      ${nextSong.key ? `<span>Key: ${nextSong.key}</span>` : ''}
+                      ${nextSong.harmonica ? `<span>Acc: ${nextSong.harmonica.replace(/_/g, '-').split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join('-')}</span>` : ''}
+                      ${nextSong.bas_bariton ? `<span>${nextSong.bas_bariton}</span>` : ''}
+                    </div>
+                  </div>
+                ` : ''}
+              </div>
+            `;
+            }).join('')}
+          </body>
+        </html>
+      `;
 
-    const html2pdf = (await import("html2pdf.js")).default;
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
 
-    const opt = {
-      margin: 1,
-      filename: `performance-${new Date().toISOString()}.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
-    };
-
-    html2pdf().set(opt).from(printContent).save();
+      // Wait for content to load
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      alert("Error exporting PDF. Please try again.");
+    }
   };
 
   if (roundsLoading) {
     return <div className="container mx-auto p-8">Loading...</div>;
   }
 
-  if (performanceData && performanceData.songs.length > 0) {
+  if (performanceStarted && performanceData && performanceData.songs.length > 0) {
     const currentSong = performanceData.songs[currentSongIndex];
     const nextSong = performanceData.songs[currentSongIndex + 1];
     const previousSong = performanceData.songs[currentSongIndex - 1];
@@ -126,76 +240,100 @@ export default function PerformancePage() {
             {/* Top bar - hidden if hideTopbar is true */}
             {!hideTopbar && (
               <div className="sticky top-0 bg-background/95 backdrop-blur-sm border-b z-10 animate-in slide-in-from-top">
-                <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-                  <div className="flex items-center gap-8">
-                    <Button
-                      onClick={handlePrevious}
-                      disabled={currentSongIndex === 0}
-                      size="lg"
-                      variant="ghost"
-                      className="h-14 text-xl"
-                    >
-                      <ArrowLeft className="mr-2 h-7 w-7" />
-                      Previous
-                    </Button>
+                <div className="container mx-auto px-6 py-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-8">
+                      <Button
+                        onClick={handlePrevious}
+                        disabled={currentSongIndex === 0}
+                        size="lg"
+                        variant="ghost"
+                        className="h-14 text-xl"
+                      >
+                        <ArrowLeft className="mr-2 h-7 w-7" />
+                        Previous
+                      </Button>
 
-                    <div className="text-center">
-                      <p className="text-2xl font-semibold">
-                        Song {currentSongIndex + 1} of {performanceData.songs.length}
-                      </p>
+                      <div className="text-center">
+                        <p className="text-2xl font-semibold">
+                          Song {currentSongIndex + 1} of {performanceData.songs.length}
+                        </p>
+                      </div>
+
+                      <Button
+                        onClick={handleNext}
+                        disabled={currentSongIndex === performanceData.songs.length - 1}
+                        size="lg"
+                        variant="ghost"
+                        className="h-14 text-xl"
+                      >
+                        Next
+                        <ArrowRight className="ml-2 h-7 w-7" />
+                      </Button>
                     </div>
 
-                    <Button
-                      onClick={handleNext}
-                      disabled={currentSongIndex === performanceData.songs.length - 1}
-                      size="lg"
-                      variant="ghost"
-                      className="h-14 text-xl"
-                    >
-                      Next
-                      <ArrowRight className="ml-2 h-7 w-7" />
-                    </Button>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 px-3 py-1 bg-muted rounded">
+                        <button
+                          onClick={() => setFontSize(Math.max(fontSize - 2, 18))}
+                          className="text-xl px-2 hover:bg-background rounded"
+                        >
+                          A-
+                        </button>
+                        <button
+                          onClick={() => setFontSize(Math.min(fontSize + 2, 36))}
+                          className="text-xl px-2 hover:bg-background rounded"
+                        >
+                          A+
+                        </button>
+                      </div>
+                      <Button
+                        onClick={() => setShowLyrics(!showLyrics)}
+                        variant="secondary"
+                        size="lg"
+                      >
+                        {showLyrics ? "Hide" : "Show"} Lyrics
+                      </Button>
+                      <Button
+                        onClick={() => setHideTopbar(true)}
+                        variant="ghost"
+                        size="lg"
+                        title="Hide (Press H to show again)"
+                      >
+                        Hide Bar
+                      </Button>
+                      <Button
+                        onClick={() => setFullscreen(false)}
+                        variant="ghost"
+                        size="icon"
+                        className="h-12 w-12"
+                      >
+                        <X className="h-6 w-6" />
+                      </Button>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 px-3 py-1 bg-muted rounded">
-                      <button
-                        onClick={() => setFontSize(Math.max(fontSize - 2, 18))}
-                        className="text-xl px-2 hover:bg-background rounded"
-                      >
-                        A-
-                      </button>
-                      <button
-                        onClick={() => setFontSize(Math.min(fontSize + 2, 36))}
-                        className="text-xl px-2 hover:bg-background rounded"
-                      >
-                        A+
-                      </button>
+                  {/* Horizontal scrollbar for song navigation */}
+                  {!hideTopbar && (
+                    <div className="w-full overflow-x-auto">
+                      <div className="flex gap-2 pb-2" style={{ width: 'max-content' }}>
+                        {performanceData.songs.map((song, index) => (
+                          <button
+                            key={song.id}
+                            onClick={() => setCurrentSongIndex(index)}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
+                              index === currentSongIndex
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-muted hover:bg-muted/80'
+                            }`}
+                          >
+                            {index + 1}. {song.title.substring(0, 30)}
+                            {song.title.length > 30 ? '...' : ''}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    <Button
-                      onClick={() => setShowLyrics(!showLyrics)}
-                      variant="secondary"
-                      size="lg"
-                    >
-                      {showLyrics ? "Hide" : "Show"} Lyrics
-                    </Button>
-                    <Button
-                      onClick={() => setHideTopbar(true)}
-                      variant="ghost"
-                      size="lg"
-                      title="Hide (Press H to show again)"
-                    >
-                      Hide Bar
-                    </Button>
-                    <Button
-                      onClick={() => setFullscreen(false)}
-                      variant="ghost"
-                      size="icon"
-                      className="h-12 w-12"
-                    >
-                      <X className="h-6 w-6" />
-                    </Button>
-                  </div>
+                  )}
                 </div>
               </div>
             )}
@@ -264,7 +402,7 @@ export default function PerformancePage() {
         <div className="mb-8 flex items-center justify-between">
           <h1 className="text-3xl font-bold">Performance Mode</h1>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setSelectedRounds([])}>
+            <Button variant="outline" onClick={() => { setSelectedRounds([]); setPerformanceStarted(false); }}>
               Back to Selection
             </Button>
             <Button onClick={exportToPDF}>
@@ -352,19 +490,53 @@ export default function PerformancePage() {
             </Card>
           )}
         </div>
+
+        {/* Hidden content for PDF export */}
+        <div id="print-content" className="hidden bg-white text-black p-8">
+          <div className="max-w-4xl mx-auto">
+            {performanceData.songs.map((song, index) => (
+              <div key={song.id} className="mb-12" style={{ pageBreakAfter: 'auto' }}>
+                <h1 className="text-3xl font-bold mb-3">{song.title}</h1>
+                {song.roundName && <p className="text-xl text-gray-600 mb-4">{song.roundName}</p>}
+                <div className="text-base leading-relaxed whitespace-pre-wrap font-serif">
+                  {song.lyrics}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-8">
-      <h1 className="mb-8 text-3xl font-bold">Performance Mode</h1>
+    <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+      <h1 className="mb-6 sm:mb-8 text-2xl sm:text-3xl font-bold">Performance Mode</h1>
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Select Rounds for Performance</CardTitle>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <CardTitle className="text-lg sm:text-xl">Select Rounds for Performance</CardTitle>
+            {selectedRounds.length > 0 && (
+              <div className="text-sm text-muted-foreground">
+                <span className="font-semibold text-foreground">{selectedRounds.length}</span> round{selectedRounds.length !== 1 ? "s" : ""} selected
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
+          {selectedRounds.length > 0 && (
+            <div className="mb-4 p-3 bg-muted rounded-md">
+              <p className="text-sm text-muted-foreground">
+                Total songs:{" "}
+                <span className="font-semibold text-foreground">
+                  {rounds
+                    ?.filter((r) => selectedRounds.includes(r.id))
+                    .reduce((sum, r) => sum + r.roundItems.length, 0)}
+                </span>
+              </p>
+            </div>
+          )}
           <div className="space-y-4">
             {rounds?.map((round) => (
               <div key={round.id} className="flex items-center space-x-2">
@@ -378,13 +550,13 @@ export default function PerformancePage() {
                   className="flex-1 cursor-pointer"
                 >
                   <div>
-                    <p className="font-medium">{round.name}</p>
+                    <p className="font-medium text-sm sm:text-base">{round.name}</p>
                     {round.description && (
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         {round.description}
                       </p>
                     )}
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       {round.roundItems.length} song
                       {round.roundItems.length !== 1 ? "s" : ""}
                     </p>
@@ -400,6 +572,7 @@ export default function PerformancePage() {
         onClick={handleStart}
         disabled={selectedRounds.length === 0}
         size="lg"
+        className="w-full sm:w-auto"
       >
         Start Performance
       </Button>

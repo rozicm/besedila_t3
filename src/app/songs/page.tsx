@@ -116,10 +116,10 @@ export default function SongsPage() {
   };
 
   return (
-    <div className="container mx-auto p-8">
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Songs</h1>
-        <Button onClick={() => setIsModalOpen(true)}>
+    <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+      <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold">Songs</h1>
+        <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           Add New Song
         </Button>
@@ -127,10 +127,10 @@ export default function SongsPage() {
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle className="text-lg sm:text-xl">Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <Label htmlFor="search">Search</Label>
               <Input
@@ -185,7 +185,7 @@ export default function SongsPage() {
       {isLoading ? (
         <div>Loading...</div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {songs?.map((song) => (
             <Card key={song.id}>
               <CardHeader>

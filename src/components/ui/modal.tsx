@@ -31,7 +31,7 @@ export function Modal({ open, onClose, title, children, footer, maxWidth = "max-
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
@@ -39,14 +39,13 @@ export function Modal({ open, onClose, title, children, footer, maxWidth = "max-
     >
       <div
         className={cn(
-          "relative z-50 w-full",
-          maxWidth,
-          "max-h-[90vh] bg-card text-card-foreground shadow-lg rounded-lg overflow-hidden flex flex-col"
+          "relative z-50 w-full max-h-[90vh] bg-card text-card-foreground shadow-lg rounded-lg overflow-hidden flex flex-col",
+          maxWidth
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 id="modal-title" className="text-xl font-semibold">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b">
+          <h2 id="modal-title" className="text-lg sm:text-xl font-semibold">
             {title}
           </h2>
           <button
@@ -59,10 +58,10 @@ export function Modal({ open, onClose, title, children, footer, maxWidth = "max-
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">{children}</div>
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">{children}</div>
 
         {footer && (
-          <div className="flex items-center justify-end gap-2 p-6 border-t">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 p-4 sm:p-6 border-t">
             {footer}
           </div>
         )}
