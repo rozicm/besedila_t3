@@ -62,7 +62,7 @@ function SortableItem({ song, onRemove }: { song: any; onRemove: () => void }) {
         {song.key && <p className="text-sm text-muted-foreground">Key: {song.key}</p>}
         {song.harmonica && (
           <p className="text-sm text-muted-foreground">
-            Accordion: {song.harmonica.replace(/_/g, '-').split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join('-')}
+            Accordion: {song.harmonica.replace(/_/g, '-').split('-').map((part: string) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join('-')}
           </p>
         )}
       </div>
@@ -333,7 +333,7 @@ function RoundFormModal({
                   {song.key && <p className="text-xs text-muted-foreground ml-6">Key: {song.key}</p>}
                   {song.harmonica && (
                     <p className="text-xs text-muted-foreground ml-6">
-                      Accordion: {song.harmonica.replace(/_/g, '-').split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join('-')}
+                      Accordion: {song.harmonica.replace(/_/g, '-').split('-').map((part: string) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join('-')}
                     </p>
                   )}
                 </div>

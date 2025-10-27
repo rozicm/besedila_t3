@@ -6,7 +6,6 @@ import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Label } from "~/components/ui/label";
-import html2pdf from "html2pdf.js";
 import { ArrowLeft, ArrowRight, Download, X, Maximize2 } from "lucide-react";
 
 export default function PerformancePage() {
@@ -90,12 +89,14 @@ export default function PerformancePage() {
     );
   };
 
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
     if (!performanceData) return;
 
     const printContent = document.getElementById("print-content");
 
     if (!printContent) return;
+
+    const html2pdf = (await import("html2pdf.js")).default;
 
     const opt = {
       margin: 1,
