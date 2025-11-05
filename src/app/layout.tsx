@@ -1,5 +1,6 @@
 import "~/styles/globals.css";
 import { Providers } from "~/components/providers";
+import { ClerkProvider, SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
 import { ThemeProvider } from "~/components/theme-provider";
 import { Nav } from "~/components/layout/nav";
 
@@ -24,14 +25,21 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/Zalet.png" />
       </head>
       <body>
-        <ThemeProvider defaultTheme="light">
-          <Providers>
-            <div className="flex min-h-screen flex-col">
-              <Nav />
-              <main className="flex-1">{children}</main>
-            </div>
-          </Providers>
-        </ThemeProvider>
+        <ClerkProvider>
+          <ThemeProvider defaultTheme="light">
+            <Providers>
+              <SignedIn>
+                <div className="flex min-h-screen flex-col">
+                  <Nav />
+                  <main className="flex-1">{children}</main>
+                </div>
+              </SignedIn>
+              <SignedOut>
+                <RedirectToSignIn />
+              </SignedOut>
+            </Providers>
+          </ThemeProvider>
+        </ClerkProvider>
       </body>
     </html>
   );

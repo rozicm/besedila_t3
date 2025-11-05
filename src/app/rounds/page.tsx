@@ -65,6 +65,9 @@ function SortableItem({ song, onRemove }: { song: any; onRemove: () => void }) {
             Accordion: {song.harmonica.replace(/_/g, '-').split('-').map((part: string) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join('-')}
           </p>
         )}
+        {song.bas_bariton && (
+          <p className="text-sm text-muted-foreground">Instrument: {song.bas_bariton}</p>
+        )}
       </div>
       <Button variant="ghost" size="sm" onClick={onRemove}>
         <Trash2 className="h-4 w-4 text-destructive" />
@@ -99,7 +102,70 @@ export default function RoundsPage() {
   });
 
   const reorderMutation = api.rounds.reorderSongs.useMutation({
-    onSuccess: () => {
+    // Optimistically reorder songs locally for instant UI feedback
+    onMutate: async (variables) => {
+      await utils.rounds.list.cancel();
+      const previous = utils.rounds.list.getData();
+
+      utils.rounds.list.setData(undefined, (old: any) => {
+        if (!old) return old;
+        return old.map((round: any) => {
+          if (round.id !== variables.roundId) return round;
+          // Build a lookup of existing items by songId
+          const bySongId: Record<number, any> = {};
+          for (const item of round.roundItems) {
+            bySongId[item.song.id] = item;
+          }
+          // Rebuild roundItems in the new order
+          const reordered = variables.songIds
+            .map((songId, index) => {
+              const item = bySongId[songId];
+              if (!item) return null;
+              return { ...item, position: index };
+            })
+            .filter(Boolean);
+
+          return {
+            ...round,
+            roundItems: reordered,
+          };
+        });
+      });
+
+      return { previous };
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previous) {
+        utils.rounds.list.setData(undefined, context.previous as any);
+      }
+    },
+    // No refetch on success; optimistic update already applied
+  });
+
+  const removeSongMutation = api.rounds.removeSong.useMutation({
+    onMutate: async (variables) => {
+      await utils.rounds.list.cancel();
+      const previous = utils.rounds.list.getData();
+
+      utils.rounds.list.setData(undefined, (old: any) => {
+        if (!old) return old;
+        return old.map((round: any) => {
+          if (round.id !== variables.roundId) return round;
+          return {
+            ...round,
+            roundItems: round.roundItems.filter((ri: any) => ri.song.id !== variables.songId),
+          };
+        });
+      });
+
+      return { previous };
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previous) {
+        utils.rounds.list.setData(undefined, context.previous as any);
+      }
+    },
+    onSettled: () => {
       void utils.rounds.list.invalidate();
     },
   });
@@ -133,6 +199,15 @@ export default function RoundsPage() {
 
     const oldIndex = round.roundItems.findIndex((item) => item.song.id === active.id);
     const newIndex = round.roundItems.findIndex((item) => item.song.id === over.id);
+
+    // Safety check: ensure both indices are valid
+    if (oldIndex === -1 || newIndex === -1) {
+      console.error("Invalid drag indices", { oldIndex, newIndex, active: active.id, over: over.id });
+      return;
+    }
+
+    // If indices haven't changed, no need to update
+    if (oldIndex === newIndex) return;
 
     const newOrder = arrayMove(round.roundItems, oldIndex, newIndex);
     const newSongIds = newOrder.map((item) => item.song.id);
@@ -198,16 +273,9 @@ export default function RoundsPage() {
                   <div className="space-y-2">
                     {round.roundItems.map((item) => (
                       <SortableItem
-                        key={item.id}
+                        key={item.song.id}
                         song={item.song}
-                        onRemove={() =>
-                          reorderMutation.mutate({
-                            roundId: round.id,
-                            songIds: round.roundItems
-                              .filter((i) => i.song.id !== item.song.id)
-                              .map((i) => i.song.id),
-                          })
-                        }
+                        onRemove={() => removeSongMutation.mutate({ roundId: round.id, songId: item.song.id })}
                       />
                     ))}
                   </div>
@@ -335,6 +403,9 @@ function RoundFormModal({
                     <p className="text-xs text-muted-foreground ml-6">
                       Accordion: {song.harmonica.replace(/_/g, '-').split('-').map((part: string) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join('-')}
                     </p>
+                  )}
+                  {song.bas_bariton && (
+                    <p className="text-xs text-muted-foreground ml-6">Instrument: {song.bas_bariton}</p>
                   )}
                 </div>
               ))}

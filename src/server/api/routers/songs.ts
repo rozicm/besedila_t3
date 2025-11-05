@@ -47,7 +47,21 @@ async function fetchAndExtractLyrics(url: string) {
   const mainContent = $('article, main, .content, .entry-content, .post-content, .song-content');
 
   if (mainContent.length) {
-    lyrics = mainContent.first().text().trim();
+    const content = mainContent.first();
+    
+    // Use text extraction to avoid HTML issues
+    // This approach preserves the natural line structure
+    lyrics = content.text();
+    
+    // Decode common HTML entities
+    lyrics = lyrics
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"');
+    
+    lyrics = lyrics.trim();
   } else {
     // Find the largest text block that looks like lyrics
     let maxLength = 0;
@@ -82,16 +96,21 @@ async function fetchAndExtractLyrics(url: string) {
   lyrics = lyrics
     .replace(/\r\n/g, '\n')
     .replace(/\r/g, '\n')
-    .replace(/\n{3,}/g, '\n\n')
+    // Replace multiple spaces with single space  
     .replace(/[ \t]+/g, ' ')
-    .replace(/^[ \t]+/gm, '')
+    // Remove leading/trailing spaces from each line
+    .replace(/^ +/gm, '')
+    .replace(/ +$/gm, '')
+    // Remove the copyright text
+    .replace(/\s*Vse pravice pripadajo avtorju besedila\.?\s*/g, '')
+    .replace(/\s*©\s*/g, '')
     .trim();
 
   return { lyrics };
 }
 
 export const songsRouter = createTRPCRouter({
-  list: publicProcedure
+  list: protectedProcedure
     .input(
       z.object({
         search: z.string().optional(),
@@ -133,7 +152,7 @@ export const songsRouter = createTRPCRouter({
       return songs;
     }),
 
-  get: publicProcedure
+  get: protectedProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
       const song = await ctx.prisma.song.findUnique({
@@ -204,7 +223,7 @@ export const songsRouter = createTRPCRouter({
       return updatedSong;
     }),
 
-  searchSongs: publicProcedure
+  searchSongs: protectedProcedure
     .input(z.object({ 
       query: z.string().min(1)
     }))
@@ -335,7 +354,7 @@ export const songsRouter = createTRPCRouter({
       }
     }),
 
-  scrapeLyrics: publicProcedure
+  scrapeLyrics: protectedProcedure
     .input(z.object({ 
       title: z.string().optional(), 
       url: z.string().optional() 

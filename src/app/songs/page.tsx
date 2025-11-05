@@ -339,6 +339,9 @@ function SongFormModal({
     onSave({
       ...formData,
       harmonica: formData.harmonica ? formData.harmonica : undefined,
+      bas_bariton: formData.bas_bariton ? formData.bas_bariton : undefined,
+      key: formData.key ? formData.key : undefined,
+      notes: formData.notes ? formData.notes : undefined,
     });
     // Reset form
     setFormData({

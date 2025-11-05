@@ -3,7 +3,7 @@ import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/
 import { TRPCError } from "@trpc/server";
 
 export const roundsRouter = createTRPCRouter({
-  list: publicProcedure.query(async ({ ctx }) => {
+  list: protectedProcedure.query(async ({ ctx }) => {
     const rounds = await ctx.prisma.round.findMany({
       include: {
         roundItems: {
@@ -23,7 +23,7 @@ export const roundsRouter = createTRPCRouter({
     return rounds;
   }),
 
-  get: publicProcedure
+  get: protectedProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
       const round = await ctx.prisma.round.findUnique({
@@ -130,54 +130,48 @@ export const roundsRouter = createTRPCRouter({
       const { roundId, songIds } = input;
 
       await ctx.prisma.$transaction(async (tx) => {
+        // Fetch existing items once
         const existingItems = await tx.roundItem.findMany({
           where: { roundId },
-          include: { song: true },
+          select: { id: true, songId: true },
         });
 
-        const itemsToDelete = existingItems.filter(
-          (item) => !songIds.includes(item.songId)
-        );
+        const existingSongIds = new Set(existingItems.map((i) => i.songId));
 
-        const itemsToKeep = existingItems.filter((item) =>
-          songIds.includes(item.songId)
-        );
+        // Delete items that are no longer present
+        await tx.roundItem.deleteMany({
+          where: {
+            roundId,
+            songId: { notIn: songIds },
+          },
+        });
 
-        const newSongIds = songIds.filter(
-          (songId) => !itemsToKeep.some((item) => item.songId === songId)
-        );
-
-        await Promise.all(itemsToDelete.map((item) => tx.roundItem.delete({
-          where: { id: item.id },
-        })));
-
-        const existingPositions = itemsToKeep.map((item, index) => ({
-          id: item.id,
-          newPosition: songIds.indexOf(item.songId),
-        }));
-
-        await Promise.all(
-          existingPositions.map(({ id, newPosition }) =>
-            tx.roundItem.update({
-              where: { id },
-              data: { position: newPosition },
-            })
-          )
-        );
-
-        for (let i = 0; i < newSongIds.length; i++) {
-          const songId = newSongIds[i]!;
-          const targetPosition = songIds.indexOf(songId);
-          await tx.roundItem.create({
-            data: {
-              roundId,
-              songId,
-              position: targetPosition,
-            },
+        // Create items that are new
+        const toCreate = songIds.filter((id) => !existingSongIds.has(id));
+        if (toCreate.length > 0) {
+          await tx.roundItem.createMany({
+            data: toCreate.map((songId) => ({ roundId, songId, position: 0 })),
+            skipDuplicates: true,
           });
+        }
+
+        // Perform a single CASE-based UPDATE for positions
+        if (songIds.length > 0) {
+          const caseClauses = songIds
+            .map((songId, index) => `WHEN ${songId} THEN ${index}`)
+            .join(" ");
+          const idsList = songIds.join(",");
+
+          await tx.$executeRawUnsafe(
+            `UPDATE "public"."round_items"
+             SET "position" = CASE "song_id" ${caseClauses} END,
+                 "updated_at" = NOW()
+             WHERE "round_id" = ${roundId} AND "song_id" IN (${idsList})`
+          );
         }
       });
 
+      // Optimistic update on client already adjusts cache; return light payload
       return { success: true };
     }),
 

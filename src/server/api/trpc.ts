@@ -2,14 +2,17 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import { superjson } from "~/lib/superjson";
 import { ZodError } from "zod";
 import { prisma } from "~/server/db";
+import { auth } from "@clerk/nextjs/server";
 
 type CreateContextOptions = {
-  session: any;
+  auth: {
+    userId: string | null;
+  } | null;
 };
 
 const createInnerTRPCContext = (opts: CreateContextOptions) => {
   return {
-    session: opts.session,
+    auth: opts.auth,
     prisma,
   };
 };
@@ -18,11 +21,10 @@ export const createTRPCContext = async (opts: {
   req: Request;
   resHeaders: Headers;
 }) => {
-  // Session is disabled for now - return null to avoid build issues
-  const session = null;
+  const { userId } = await auth();
 
   return createInnerTRPCContext({
-    session,
+    auth: { userId: userId ?? null },
   });
 };
 
@@ -44,12 +46,12 @@ export const createTRPCRouter = t.router;
 export const publicProcedure = t.procedure;
 
 const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
-  if (!ctx.session || !ctx.session.user) {
+  if (!ctx.auth || !ctx.auth.userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   return next({
     ctx: {
-      session: { ...ctx.session, user: ctx.session.user },
+      auth: ctx.auth,
     },
   });
 });

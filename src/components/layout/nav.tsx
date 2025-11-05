@@ -7,6 +7,7 @@ import { cn } from "~/lib/utils";
 import { useTheme } from "~/components/theme-provider";
 import { Button } from "~/components/ui/button";
 import { Moon, Sun, Music, Menu, X } from "lucide-react";
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 
 const navigation = [
   { name: "Home", href: "/" },
@@ -48,8 +49,8 @@ export function Nav() {
             ))}
           </div>
 
-          {/* Desktop Theme Toggle */}
-          <div className="hidden md:flex items-center gap-2">
+          {/* Desktop Right Controls */}
+          <div className="hidden md:flex items-center gap-3">
             <Button
               variant="ghost"
               size="sm"
@@ -62,6 +63,14 @@ export function Nav() {
                 <Sun className="h-5 w-5" />
               )}
             </Button>
+            <SignedOut>
+              <SignInButton>
+                <Button size="sm">Sign in</Button>
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              <UserButton appearance={{ elements: { userButtonAvatarBox: "h-7 w-7" } }} />
+            </SignedIn>
           </div>
 
           {/* Mobile Menu Button */}
@@ -78,6 +87,14 @@ export function Nav() {
                 <Sun className="h-5 w-5" />
               )}
             </Button>
+            <SignedOut>
+              <SignInButton>
+                <Button size="sm">Sign in</Button>
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              <UserButton appearance={{ elements: { userButtonAvatarBox: "h-6 w-6" } }} />
+            </SignedIn>
             <Button
               variant="ghost"
               size="sm"
