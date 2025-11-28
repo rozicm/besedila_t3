@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "~/utils/api";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -43,20 +43,22 @@ function SortableItem({ song, onRemove }: { song: any; onRemove: () => void }) {
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const handleRemoveClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onRemove();
+  };
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-2 rounded border bg-card p-3"
+      {...attributes}
+      {...listeners}
+      className="flex items-center gap-2 rounded border bg-card p-3 cursor-grab active:cursor-grabbing"
     >
-      <button
-        {...attributes}
-        {...listeners}
-        className="cursor-grab active:cursor-grabbing"
-        aria-label="Drag to reorder"
-      >
+      <div className="flex-shrink-0">
         <GripVertical className="h-5 w-5 text-muted-foreground" />
-      </button>
+      </div>
       <div className="flex-1">
         <p className="font-medium">{song.title}</p>
         {song.key && <p className="text-sm text-muted-foreground">Key: {song.key}</p>}
@@ -69,7 +71,14 @@ function SortableItem({ song, onRemove }: { song: any; onRemove: () => void }) {
           <p className="text-sm text-muted-foreground">Instrument: {song.bas_bariton}</p>
         )}
       </div>
-      <Button variant="ghost" size="sm" onClick={onRemove}>
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        onClick={handleRemoveClick}
+        onMouseDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        className="flex-shrink-0"
+      >
         <Trash2 className="h-4 w-4 text-destructive" />
       </Button>
     </div>
@@ -91,6 +100,18 @@ export default function RoundsPage() {
       setIsModalOpen(false);
       setEditingRound(null);
       setSelectedSongs([]);
+      void utils.rounds.list.invalidate();
+    },
+  });
+
+  const updateMutation = api.rounds.update.useMutation({
+    onSuccess: () => {
+      void utils.rounds.list.invalidate();
+    },
+  });
+
+  const updateSongsMutation = api.rounds.reorderSongs.useMutation({
+    onSuccess: () => {
       void utils.rounds.list.invalidate();
     },
   });
@@ -171,7 +192,11 @@ export default function RoundsPage() {
   });
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -181,6 +206,59 @@ export default function RoundsPage() {
     if (selectedSongs.length > 0) {
       createMutation.mutate({ name, description, songIds: selectedSongs });
     }
+  };
+
+  const handleEditRound = (round: any) => {
+    setEditingRound(round);
+    setSelectedSongs(round.roundItems.map((item: any) => item.song.id));
+    setIsModalOpen(true);
+  };
+
+  const handleUpdateRound = async (name: string, description?: string) => {
+    if (!editingRound) return;
+
+    // Update name and description
+    const nameOrDescChanged = 
+      name !== editingRound.name || 
+      (description || "") !== (editingRound.description || "");
+
+    // Update songs if they've changed
+    const currentSongIds = editingRound.roundItems.map((item: any) => item.song.id);
+    const songsChanged = 
+      selectedSongs.length !== currentSongIds.length ||
+      !selectedSongs.every((id, index) => id === currentSongIds[index]);
+
+    // Only make API calls if something actually changed
+    if (nameOrDescChanged || songsChanged) {
+      const promises: Promise<any>[] = [];
+
+      if (nameOrDescChanged) {
+        promises.push(
+          updateMutation.mutateAsync({
+            id: editingRound.id,
+            name,
+            description: description || undefined,
+          })
+        );
+      }
+
+      if (songsChanged) {
+        promises.push(
+          updateSongsMutation.mutateAsync({
+            roundId: editingRound.id,
+            songIds: selectedSongs,
+          })
+        );
+      }
+
+      // Wait for all updates to complete
+      await Promise.all(promises);
+    }
+
+    // Close modal after updates complete
+    setIsModalOpen(false);
+    setEditingRound(null);
+    setSelectedSongs([]);
   };
 
   const handleDeleteRound = (roundId: number) => {
@@ -251,13 +329,22 @@ export default function RoundsPage() {
                     {round.roundItems.length} song{round.roundItems.length !== 1 ? "s" : ""}
                   </p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDeleteRound(round.id)}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEditRound(round)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteRound(round.id)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -293,10 +380,11 @@ export default function RoundsPage() {
           setEditingRound(null);
           setSelectedSongs([]);
         }}
-        onSave={handleCreateRound}
+        onSave={editingRound ? handleUpdateRound : handleCreateRound}
         allSongs={allSongs || []}
         selectedSongs={selectedSongs}
         onToggleSong={toggleSongSelection}
+        editingRound={editingRound}
       />
     </div>
   );
@@ -309,6 +397,7 @@ function RoundFormModal({
   allSongs,
   selectedSongs,
   onToggleSong,
+  editingRound,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -316,10 +405,23 @@ function RoundFormModal({
   allSongs: any[];
   selectedSongs: number[];
   onToggleSong: (songId: number) => void;
+  editingRound?: any;
 }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [search, setSearch] = useState("");
+
+  // Update form when editingRound changes
+  useEffect(() => {
+    if (editingRound) {
+      setName(editingRound.name || "");
+      setDescription(editingRound.description || "");
+    } else {
+      setName("");
+      setDescription("");
+      setSearch("");
+    }
+  }, [editingRound, isOpen]);
 
   const filteredSongs = allSongs.filter((song) =>
     song.title.toLowerCase().includes(search.toLowerCase())
@@ -327,11 +429,13 @@ function RoundFormModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name && selectedSongs.length > 0) {
+    if (name && (editingRound || selectedSongs.length > 0)) {
       onSave(name, description || undefined);
-      setName("");
-      setDescription("");
-      setSearch("");
+      if (!editingRound) {
+        setName("");
+        setDescription("");
+        setSearch("");
+      }
     }
   };
 
@@ -339,15 +443,15 @@ function RoundFormModal({
     <Modal
       open={isOpen}
       onClose={onClose}
-      title="Create New Round"
+      title={editingRound ? "Edit Round" : "Create New Round"}
       maxWidth="max-w-4xl"
       footer={
         <>
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!name || selectedSongs.length === 0}>
-            Create
+          <Button onClick={handleSubmit} disabled={!name || (!editingRound && selectedSongs.length === 0)}>
+            {editingRound ? "Update" : "Create"}
           </Button>
         </>
       }
@@ -382,34 +486,38 @@ function RoundFormModal({
             className="mb-2"
           />
           <div className="max-h-[400px] overflow-y-auto rounded border p-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
-              {filteredSongs.map((song) => (
-                <div
-                  key={song.id}
-                  className="flex flex-col items-start space-y-1 rounded border p-2 hover:bg-accent cursor-pointer"
-                  onClick={() => onToggleSong(song.id)}
-                >
-                  <div className="flex items-center gap-2 w-full">
-                    <input
-                      type="checkbox"
-                      checked={selectedSongs.includes(song.id)}
-                      onChange={() => onToggleSong(song.id)}
-                      className="cursor-pointer"
-                    />
-                    <p className="font-medium text-sm truncate w-full">{song.title}</p>
+            {filteredSongs.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">No songs found</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+                {filteredSongs.map((song) => (
+                  <div
+                    key={song.id}
+                    className="flex flex-col items-start space-y-1 rounded border p-2 hover:bg-accent cursor-pointer"
+                    onClick={() => onToggleSong(song.id)}
+                  >
+                    <div className="flex items-center gap-2 w-full">
+                      <input
+                        type="checkbox"
+                        checked={selectedSongs.includes(song.id)}
+                        onChange={() => onToggleSong(song.id)}
+                        className="cursor-pointer"
+                      />
+                      <p className="font-medium text-sm truncate w-full">{song.title}</p>
+                    </div>
+                    {song.key && <p className="text-xs text-muted-foreground ml-6">Key: {song.key}</p>}
+                    {song.harmonica && (
+                      <p className="text-xs text-muted-foreground ml-6">
+                        Accordion: {song.harmonica.replace(/_/g, '-').split('-').map((part: string) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join('-')}
+                      </p>
+                    )}
+                    {song.bas_bariton && (
+                      <p className="text-xs text-muted-foreground ml-6">Instrument: {song.bas_bariton}</p>
+                    )}
                   </div>
-                  {song.key && <p className="text-xs text-muted-foreground ml-6">Key: {song.key}</p>}
-                  {song.harmonica && (
-                    <p className="text-xs text-muted-foreground ml-6">
-                      Accordion: {song.harmonica.replace(/_/g, '-').split('-').map((part: string) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join('-')}
-                    </p>
-                  )}
-                  {song.bas_bariton && (
-                    <p className="text-xs text-muted-foreground ml-6">Instrument: {song.bas_bariton}</p>
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </form>
