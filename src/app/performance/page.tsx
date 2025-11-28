@@ -360,9 +360,20 @@ export default function PerformancePage() {
             <div className={`flex-1 container mx-auto px-3 sm:px-6 py-6 sm:py-12 ${hideTopbar ? 'pt-16 sm:pt-20' : ''}`}>
               <div className="max-w-5xl mx-auto">
                 <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-3 sm:mb-6 text-center">{currentSong.title}</h1>
-                <p className="text-xl sm:text-3xl md:text-4xl text-muted-foreground mb-6 sm:mb-12 text-center">
+                <p className="text-xl sm:text-3xl md:text-4xl text-muted-foreground mb-3 sm:mb-4 text-center">
                   {currentSong.roundName}
                 </p>
+                {(currentSong.key || currentSong.harmonica || currentSong.bas_bariton) && (
+                  <div className="text-sm sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-12 text-center italic space-x-3 sm:space-x-6">
+                    {currentSong.key && <span>Key: {currentSong.key}</span>}
+                    {currentSong.harmonica && (
+                      <span>
+                        Accordion: {currentSong.harmonica.replace(/_/g, '-').split('-').map((part: string) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join('-')}
+                      </span>
+                    )}
+                    {currentSong.bas_bariton && <span>{currentSong.bas_bariton}</span>}
+                  </div>
+                )}
 
                 {showLyrics && (
                   <pre className="whitespace-pre-wrap bg-muted/50 p-4 sm:p-8 md:p-12 rounded-2xl border-2 font-serif text-center" style={{ fontSize: `${fontSize}px`, lineHeight: '1.8' }}>
@@ -376,12 +387,34 @@ export default function PerformancePage() {
                       <div className="text-center">
                         <p className="text-sm sm:text-lg text-muted-foreground mb-1 sm:mb-2">Previous</p>
                         <p className="text-base sm:text-xl md:text-2xl font-medium">{previousSong.title}</p>
+                        {(previousSong.key || previousSong.harmonica || previousSong.bas_bariton) && (
+                          <div className="text-xs sm:text-sm text-muted-foreground mt-1 italic space-x-2 sm:space-x-3">
+                            {previousSong.key && <span>Key: {previousSong.key}</span>}
+                            {previousSong.harmonica && (
+                              <span>
+                                Acc: {previousSong.harmonica.replace(/_/g, '-').split('-').map((part: string) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join('-')}
+                              </span>
+                            )}
+                            {previousSong.bas_bariton && <span>{previousSong.bas_bariton}</span>}
+                          </div>
+                        )}
                       </div>
                     )}
                     {nextSong && (
                       <div className="text-center">
                         <p className="text-sm sm:text-lg text-muted-foreground mb-1 sm:mb-2">Next</p>
                         <p className="text-base sm:text-xl md:text-2xl font-medium">{nextSong.title}</p>
+                        {(nextSong.key || nextSong.harmonica || nextSong.bas_bariton) && (
+                          <div className="text-xs sm:text-sm text-muted-foreground mt-1 italic space-x-2 sm:space-x-3">
+                            {nextSong.key && <span>Key: {nextSong.key}</span>}
+                            {nextSong.harmonica && (
+                              <span>
+                                Acc: {nextSong.harmonica.replace(/_/g, '-').split('-').map((part: string) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join('-')}
+                              </span>
+                            )}
+                            {nextSong.bas_bariton && <span>{nextSong.bas_bariton}</span>}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -453,7 +486,21 @@ export default function PerformancePage() {
         <Card>
           <CardHeader>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <CardTitle className="text-xl sm:text-2xl">{currentSong.title}</CardTitle>
+              <div className="flex-1">
+                <CardTitle className="text-xl sm:text-2xl">{currentSong.title}</CardTitle>
+                <p className="text-sm sm:text-base text-muted-foreground mt-1">{currentSong.roundName}</p>
+                {(currentSong.key || currentSong.harmonica || currentSong.bas_bariton) && (
+                  <div className="text-xs sm:text-sm text-muted-foreground mt-2 italic space-x-3 sm:space-x-4">
+                    {currentSong.key && <span>Key: {currentSong.key}</span>}
+                    {currentSong.harmonica && (
+                      <span>
+                        Accordion: {currentSong.harmonica.replace(/_/g, '-').split('-').map((part: string) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join('-')}
+                      </span>
+                    )}
+                    {currentSong.bas_bariton && <span>{currentSong.bas_bariton}</span>}
+                  </div>
+                )}
+              </div>
               <Button
                 variant="secondary"
                 onClick={() => setShowLyrics(!showLyrics)}
@@ -462,7 +509,6 @@ export default function PerformancePage() {
                 {showLyrics ? "Hide" : "Show"} Lyrics
               </Button>
             </div>
-            <p className="text-sm sm:text-base text-muted-foreground">{currentSong.roundName}</p>
           </CardHeader>
           <CardContent>
             {showLyrics && (
@@ -482,6 +528,17 @@ export default function PerformancePage() {
               <CardContent>
                 <p className="font-medium">{previousSong.title}</p>
                 <p className="text-sm text-muted-foreground">{previousSong.roundName}</p>
+                {(previousSong.key || previousSong.harmonica || previousSong.bas_bariton) && (
+                  <div className="text-xs text-muted-foreground mt-1 italic space-x-2">
+                    {previousSong.key && <span>Key: {previousSong.key}</span>}
+                    {previousSong.harmonica && (
+                      <span>
+                        Acc: {previousSong.harmonica.replace(/_/g, '-').split('-').map((part: string) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join('-')}
+                      </span>
+                    )}
+                    {previousSong.bas_bariton && <span>{previousSong.bas_bariton}</span>}
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -493,6 +550,17 @@ export default function PerformancePage() {
               <CardContent>
                 <p className="font-medium">{nextSong.title}</p>
                 <p className="text-sm text-muted-foreground">{nextSong.roundName}</p>
+                {(nextSong.key || nextSong.harmonica || nextSong.bas_bariton) && (
+                  <div className="text-xs text-muted-foreground mt-1 italic space-x-2">
+                    {nextSong.key && <span>Key: {nextSong.key}</span>}
+                    {nextSong.harmonica && (
+                      <span>
+                        Acc: {nextSong.harmonica.replace(/_/g, '-').split('-').map((part: string) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join('-')}
+                      </span>
+                    )}
+                    {nextSong.bas_bariton && <span>{nextSong.bas_bariton}</span>}
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
