@@ -12,7 +12,7 @@ function TabIcon({ name, focused }: { name: IconName; focused: boolean }) {
     <View style={{ alignItems: "center", justifyContent: "center" }}>
       <Ionicons
         name={name}
-        size={24}
+        size={28}
         color={focused ? Colors.primary : Colors.mutedForeground}
       />
     </View>
@@ -38,23 +38,18 @@ export default function AppLayout() {
           backgroundColor: Colors.background,
           borderTopWidth: 1,
           borderTopColor: Colors.border,
-          paddingTop: 8,
-          paddingBottom: 8,
-          height: 70,
+          paddingTop: 10,
+          paddingBottom: 10,
+          height: 67,
         },
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.mutedForeground,
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: "600",
-          marginTop: 4,
-        },
+        tabBarShowLabel: false,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
           tabBarIcon: ({ focused }) => (
             <TabIcon name={focused ? "home" : "home-outline"} focused={focused} />
           ),
@@ -63,7 +58,6 @@ export default function AppLayout() {
       <Tabs.Screen
         name="songs"
         options={{
-          title: "Songs",
           tabBarIcon: ({ focused }) => (
             <TabIcon name={focused ? "musical-notes" : "musical-notes-outline"} focused={focused} />
           ),
@@ -72,7 +66,6 @@ export default function AppLayout() {
       <Tabs.Screen
         name="rounds"
         options={{
-          title: "Rounds",
           tabBarIcon: ({ focused }) => (
             <TabIcon name={focused ? "list" : "list-outline"} focused={focused} />
           ),
@@ -81,7 +74,6 @@ export default function AppLayout() {
       <Tabs.Screen
         name="performance"
         options={{
-          title: "Play",
           tabBarIcon: ({ focused }) => (
             <TabIcon name={focused ? "play-circle" : "play-circle-outline"} focused={focused} />
           ),
@@ -90,7 +82,6 @@ export default function AppLayout() {
       <Tabs.Screen
         name="groups"
         options={{
-          title: "Groups",
           tabBarIcon: ({ focused }) => (
             <TabIcon name={focused ? "people" : "people-outline"} focused={focused} />
           ),
@@ -99,7 +90,6 @@ export default function AppLayout() {
       <Tabs.Screen
         name="calendar"
         options={{
-          title: "Calendar",
           tabBarIcon: ({ focused }) => (
             <TabIcon name={focused ? "calendar" : "calendar-outline"} focused={focused} />
           ),

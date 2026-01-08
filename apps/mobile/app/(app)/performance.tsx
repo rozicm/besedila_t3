@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { api } from '../../lib/trpc';
 import { Colors, BorderRadius, Spacing, FontSizes } from '../../constants/theme';
+import { useGroup } from '../../providers/group-context';
 
 function normalizeHarmonica(value: string | undefined | null): string {
   if (!value) return '';
@@ -17,7 +18,11 @@ export default function PerformanceScreen() {
   const [showLyrics, setShowLyrics] = useState(true);
   const [fontSize, setFontSize] = useState(18);
 
-  const { data: rounds, isLoading: roundsLoading } = api.rounds.list.useQuery();
+  const { selectedGroupId, isLoading: isGroupLoading } = useGroup();
+  const { data: rounds, isLoading: roundsLoading } = api.rounds.list.useQuery(
+    { groupId: selectedGroupId! },
+    { enabled: !!selectedGroupId }
+  );
   const { data: performanceData, isLoading: performanceLoading } = api.performance.getPerformanceData.useQuery({ roundIds: selectedRounds }, { enabled: selectedRounds.length > 0 && performanceStarted });
 
   const toggleRound = (roundId: number) => setSelectedRounds((prev) => prev.includes(roundId) ? prev.filter((id) => id !== roundId) : [...prev, roundId]);
@@ -98,7 +103,19 @@ export default function PerformanceScreen() {
     );
   }
 
-  if (roundsLoading) return <SafeAreaView style={styles.loadingContainer} edges={['top']}><ActivityIndicator size="large" color={Colors.primary} /><Text style={styles.loadingText}>Loading rounds...</Text></SafeAreaView>;
+  if (isGroupLoading || roundsLoading) return <SafeAreaView style={styles.loadingContainer} edges={['top']}><ActivityIndicator size="large" color={Colors.primary} /><Text style={styles.loadingText}>Loading rounds...</Text></SafeAreaView>;
+
+  if (!selectedGroupId) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.emptyState}>
+          <Ionicons name="people" size={64} color={Colors.border} />
+          <Text style={styles.emptyTitle}>No group selected</Text>
+          <Text style={styles.emptyDescription}>Please create or join a group to start a performance</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   const totalSongs = rounds?.filter((r) => selectedRounds.includes(r.id)).reduce((sum, r) => sum + r.roundItems.length, 0) ?? 0;
 
