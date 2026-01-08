@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, FlatList, KeyboardAvoidingView, Platform, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomSheet } from '../../components/ui/BottomSheet';
@@ -21,6 +21,12 @@ export default function SongsScreen() {
   const [editingSong, setEditingSong] = useState<Song | null>(null);
   const [viewingSong, setViewingSong] = useState<Song | null>(null);
   const [formData, setFormData] = useState({ title: '', lyrics: '', genre: '', key: '', notes: '', favorite: false, harmonica: '', bas_bariton: '' });
+  const [isScraping, setIsScraping] = useState(false);
+  const [scrapeError, setScrapeError] = useState<string | null>(null);
+  const [lyricsUrl, setLyricsUrl] = useState('');
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [searchResults, setSearchResults] = useState<Array<{title: string, artist: string, url: string}>>([]);
+  const [targetScrapeUrl, setTargetScrapeUrl] = useState<string>('');
 
   const { selectedGroupId, isLoading: isGroupLoading, groups } = useGroup();
   const utils = api.useContext();
@@ -29,14 +35,102 @@ export default function SongsScreen() {
     { enabled: !!selectedGroupId }
   );
 
+  const searchSongsQuery = api.songs.searchSongs.useQuery(
+    { query: formData.title },
+    { enabled: false, retry: false }
+  );
+
+  const scrapeLyricsQuery = api.songs.scrapeLyrics.useQuery(
+    { title: formData.title, url: targetScrapeUrl || undefined },
+    { enabled: false, retry: false }
+  );
+
   const createMutation = api.songs.create.useMutation({ onSuccess: () => { setIsModalOpen(false); resetForm(); utils.songs.list.invalidate(); }, onError: (err) => Alert.alert('Error', err.message) });
   const updateMutation = api.songs.update.useMutation({ onSuccess: () => { setIsModalOpen(false); setEditingSong(null); resetForm(); utils.songs.list.invalidate(); }, onError: (err) => Alert.alert('Error', err.message) });
   const deleteMutation = api.songs.delete.useMutation({ onSuccess: () => utils.songs.list.invalidate(), onError: (err) => Alert.alert('Error', err.message) });
   const toggleFavoriteMutation = api.songs.toggleFavorite.useMutation({ onSuccess: () => utils.songs.list.invalidate() });
 
-  const resetForm = () => setFormData({ title: '', lyrics: '', genre: '', key: '', notes: '', favorite: false, harmonica: '', bas_bariton: '' });
+  const resetForm = useCallback(() => {
+    setFormData({ title: '', lyrics: '', genre: '', key: '', notes: '', favorite: false, harmonica: '', bas_bariton: '' });
+    setLyricsUrl('');
+    setShowSearchResults(false);
+    setSearchResults([]);
+    setScrapeError(null);
+    setTargetScrapeUrl('');
+  }, []);
 
-  const handleEdit = (song: Song) => { setEditingSong(song); setFormData({ title: song.title, lyrics: song.lyrics, genre: song.genre, key: song.key ?? '', notes: song.notes ?? '', favorite: song.favorite, harmonica: normalizeHarmonica(song.harmonica), bas_bariton: song.bas_bariton ?? '' }); setIsModalOpen(true); };
+  React.useEffect(() => {
+    if (isModalOpen && editingSong) {
+      setFormData({ title: editingSong.title, lyrics: editingSong.lyrics, genre: editingSong.genre, key: editingSong.key ?? '', notes: editingSong.notes ?? '', favorite: editingSong.favorite, harmonica: normalizeHarmonica(editingSong.harmonica), bas_bariton: editingSong.bas_bariton ?? '' });
+      setLyricsUrl('');
+      setShowSearchResults(false);
+      setSearchResults([]);
+      setScrapeError(null);
+    } else if (isModalOpen && !editingSong) {
+      resetForm();
+    }
+  }, [isModalOpen, editingSong, resetForm]);
+
+  const handleSearch = async () => {
+    if (!formData.title.trim() && !lyricsUrl.trim()) {
+      setScrapeError('Please enter a title or URL first');
+      return;
+    }
+
+    // If URL is provided, scrape directly
+    if (lyricsUrl.trim()) {
+      await handleDirectScrape();
+      return;
+    }
+
+    setIsScraping(true);
+    setScrapeError(null);
+
+    try {
+      const result = await searchSongsQuery.refetch();
+      if (result.data && result.data.length > 0) {
+        setSearchResults(result.data);
+        setShowSearchResults(true);
+      } else {
+        setScrapeError('No results found');
+      }
+    } catch (error) {
+      setScrapeError(error instanceof Error ? error.message : 'Failed to search');
+    } finally {
+      setIsScraping(false);
+    }
+  };
+
+  const handleSelectResult = async (url: string) => {
+    setShowSearchResults(false);
+    setLyricsUrl(url);
+    await handleDirectScrape(url);
+  };
+
+  const handleDirectScrape = async (url?: string) => {
+    const targetUrl = url || lyricsUrl;
+    if (!targetUrl) return;
+
+    setIsScraping(true);
+    setScrapeError(null);
+
+    try {
+      // Update the target URL and refetch
+      setTargetScrapeUrl(targetUrl);
+      await new Promise(resolve => setTimeout(resolve, 100)); // Wait for state update
+      const result = await scrapeLyricsQuery.refetch();
+      if (result.data?.lyrics) {
+        setFormData({ ...formData, lyrics: result.data.lyrics });
+        setScrapeError(null);
+      }
+    } catch (error) {
+      setScrapeError(error instanceof Error ? error.message : 'Failed to scrape lyrics');
+    } finally {
+      setIsScraping(false);
+    }
+  };
+
+  const handleEdit = (song: Song) => { setEditingSong(song); setIsModalOpen(true); };
   const handleDelete = (song: Song) => {
     if (!selectedGroupId) return;
     Alert.alert('Delete Song', `Are you sure you want to delete "${song.title}"?`, [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: () => deleteMutation.mutate({ id: song.id, groupId: selectedGroupId }) }]);
@@ -119,8 +213,76 @@ export default function SongsScreen() {
                 <TouchableOpacity onPress={() => { setIsModalOpen(false); setEditingSong(null); resetForm(); }}><Ionicons name="close" size={24} color={Colors.mutedForeground} /></TouchableOpacity>
               </View>
               <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-                <View style={styles.formGroup}><Text style={styles.label}>Title *</Text><TextInput value={formData.title} onChangeText={(text) => setFormData({ ...formData, title: text })} placeholder="Song title" placeholderTextColor={Colors.mutedForeground} style={styles.textInput} /></View>
-                <View style={styles.formGroup}><Text style={styles.label}>Lyrics *</Text><TextInput value={formData.lyrics} onChangeText={(text) => setFormData({ ...formData, lyrics: text })} placeholder="Enter lyrics..." placeholderTextColor={Colors.mutedForeground} multiline numberOfLines={8} textAlignVertical="top" style={[styles.textInput, styles.textArea]} /></View>
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>Title *</Text>
+                  <TextInput 
+                    value={formData.title} 
+                    onChangeText={(text) => setFormData({ ...formData, title: text })} 
+                    placeholder="Song title or artist name" 
+                    placeholderTextColor={Colors.mutedForeground} 
+                    style={styles.textInput} 
+                  />
+                  <Text style={styles.helperText}>Search by song title or artist name. For best results, use exact titles.</Text>
+                </View>
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>Lyrics *</Text>
+                  <View style={{ marginBottom: 8 }}>
+                    <Text style={[styles.label, { fontSize: FontSizes.xs, color: Colors.mutedForeground, marginBottom: 4 }]}>Optional: Paste besedilo.si URL to scrape</Text>
+                    <TextInput 
+                      value={lyricsUrl} 
+                      onChangeText={setLyricsUrl} 
+                      placeholder="https://www.besedilo.si/..." 
+                      placeholderTextColor={Colors.mutedForeground} 
+                      style={styles.textInput}
+                      keyboardType="url"
+                      autoCapitalize="none"
+                    />
+                  </View>
+                  <TouchableOpacity 
+                    onPress={handleSearch} 
+                    disabled={isScraping || (!formData.title.trim() && !lyricsUrl.trim())} 
+                    style={[styles.scrapeButton, (isScraping || (!formData.title.trim() && !lyricsUrl.trim())) && styles.scrapeButtonDisabled]}
+                  >
+                    {isScraping ? (
+                      <ActivityIndicator size="small" color={Colors.primary} />
+                    ) : (
+                      <Ionicons name="download-outline" size={18} color={Colors.primary} />
+                    )}
+                    <Text style={[styles.scrapeButtonText, (isScraping || (!formData.title.trim() && !lyricsUrl.trim())) && { opacity: 0.5 }]}>
+                      {isScraping ? 'Searching...' : 'Search on besedilo.si'}
+                    </Text>
+                  </TouchableOpacity>
+                  {scrapeError && (
+                    <Text style={styles.errorText}>{scrapeError}</Text>
+                  )}
+                  {showSearchResults && searchResults.length > 0 && (
+                    <View style={styles.searchResultsContainer}>
+                      <Text style={styles.searchResultsTitle}>Select a song:</Text>
+                      <ScrollView style={styles.searchResultsList} nestedScrollEnabled>
+                        {searchResults.map((result, idx) => (
+                          <TouchableOpacity
+                            key={idx}
+                            onPress={() => handleSelectResult(result.url)}
+                            style={styles.searchResultItem}
+                          >
+                            <Text style={styles.searchResultTitle}>{result.title}</Text>
+                            <Text style={styles.searchResultArtist}>{result.artist}</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  )}
+                  <TextInput 
+                    value={formData.lyrics} 
+                    onChangeText={(text) => setFormData({ ...formData, lyrics: text })} 
+                    placeholder="Enter lyrics..." 
+                    placeholderTextColor={Colors.mutedForeground} 
+                    multiline 
+                    numberOfLines={8} 
+                    textAlignVertical="top" 
+                    style={[styles.textInput, styles.textArea]} 
+                  />
+                </View>
                 <View style={styles.formGroup}><Text style={styles.label}>Genre *</Text><TextInput value={formData.genre} onChangeText={(text) => setFormData({ ...formData, genre: text })} placeholder="e.g., Polka, Waltz" placeholderTextColor={Colors.mutedForeground} style={styles.textInput} /></View>
                 <View style={styles.formGroup}><Text style={styles.label}>Key</Text><TextInput value={formData.key} onChangeText={(text) => setFormData({ ...formData, key: text })} placeholder="e.g., C, G, Am" placeholderTextColor={Colors.mutedForeground} style={styles.textInput} /></View>
                 <TouchableOpacity onPress={() => setFormData({ ...formData, favorite: !formData.favorite })} style={styles.checkboxRow}>
@@ -212,4 +374,15 @@ const styles = StyleSheet.create({
   secondaryButtonText: { fontSize: FontSizes.lg, fontWeight: '600', color: Colors.foreground },
   lyricsBox: { backgroundColor: Colors.secondary, borderRadius: BorderRadius.lg, padding: Spacing.lg, marginVertical: Spacing.lg },
   lyricsText: { fontSize: FontSizes.lg, lineHeight: 28, color: Colors.foreground, fontFamily: 'SpaceMono' },
+  helperText: { fontSize: FontSizes.xs, color: Colors.mutedForeground, marginTop: 4 },
+  scrapeButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.secondary, borderWidth: 1, borderColor: Colors.border, borderRadius: BorderRadius.lg, paddingVertical: 12, paddingHorizontal: Spacing.lg, marginBottom: 8, gap: 8 },
+  scrapeButtonDisabled: { opacity: 0.5 },
+  scrapeButtonText: { fontSize: FontSizes.sm, fontWeight: '500', color: Colors.primary },
+  errorText: { fontSize: FontSizes.sm, color: Colors.red, marginBottom: 8 },
+  searchResultsContainer: { backgroundColor: Colors.secondary, borderRadius: BorderRadius.lg, padding: Spacing.md, marginBottom: 12, borderWidth: 1, borderColor: Colors.border },
+  searchResultsTitle: { fontSize: FontSizes.sm, fontWeight: '600', color: Colors.foreground, marginBottom: 8 },
+  searchResultsList: { maxHeight: 200 },
+  searchResultItem: { paddingVertical: 10, paddingHorizontal: 8, borderRadius: BorderRadius.md, marginBottom: 4, backgroundColor: Colors.card },
+  searchResultTitle: { fontSize: FontSizes.sm, fontWeight: '500', color: Colors.foreground },
+  searchResultArtist: { fontSize: FontSizes.xs, color: Colors.mutedForeground, marginTop: 2 },
 });

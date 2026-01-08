@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { api } from '../../lib/trpc';
 import { Colors, BorderRadius, Spacing, FontSizes } from '../../constants/theme';
+import { useGroup } from '../../providers/group-context';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -38,9 +39,16 @@ export default function HomeScreen() {
   const { signOut, userId } = useAuth();
   const router = useRouter();
   const [refreshing, setRefreshing] = React.useState(false);
+  const { selectedGroupId } = useGroup();
 
-  const songsQuery = api.songs.list.useQuery(undefined, { enabled: !!userId });
-  const roundsQuery = api.rounds.list.useQuery(undefined, { enabled: !!userId });
+  const songsQuery = api.songs.list.useQuery(
+    { groupId: selectedGroupId! },
+    { enabled: !!userId && !!selectedGroupId }
+  );
+  const roundsQuery = api.rounds.list.useQuery(
+    { groupId: selectedGroupId! },
+    { enabled: !!userId && !!selectedGroupId }
+  );
   const groupsQuery = api.groups.list.useQuery(undefined, { enabled: !!userId });
   const performancesQuery = api.performances.upcoming.useQuery({ limit: 5 }, { enabled: !!userId });
 
