@@ -3,8 +3,13 @@ import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/
 import { TRPCError } from "@trpc/server";
 
 export const roundsRouter = createTRPCRouter({
-  list: protectedProcedure.query(async ({ ctx }) => {
+  list: protectedProcedure
+    .input(z.object({ groupId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
     const rounds = await ctx.prisma.round.findMany({
+      where: {
+        groupId: input.groupId,
+      },
       include: {
         roundItems: {
           include: {
@@ -24,10 +29,10 @@ export const roundsRouter = createTRPCRouter({
   }),
 
   get: protectedProcedure
-    .input(z.object({ id: z.number() }))
+    .input(z.object({ id: z.number(), groupId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
-      const round = await ctx.prisma.round.findUnique({
-        where: { id: input.id },
+      const round = await ctx.prisma.round.findFirst({
+        where: { id: input.id, groupId: input.groupId },
         include: {
           roundItems: {
             include: {
@@ -56,16 +61,18 @@ export const roundsRouter = createTRPCRouter({
         name: z.string().min(1),
         description: z.string().optional(),
         songIds: z.array(z.number()),
+        groupId: z.string().min(1),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { name, description, songIds } = input;
+      const { name, description, songIds, groupId } = input;
 
       const round = await ctx.prisma.$transaction(async (tx) => {
         const newRound = await tx.round.create({
           data: {
             name,
             description,
+            groupId,
           },
         });
 
@@ -96,10 +103,23 @@ export const roundsRouter = createTRPCRouter({
         id: z.number(),
         name: z.string().min(1).optional(),
         description: z.string().optional(),
+        groupId: z.string().min(1),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { id, ...data } = input;
+      const { id, groupId, ...data } = input;
+
+      // Verify the round belongs to the group
+      const existingRound = await ctx.prisma.round.findFirst({
+        where: { id, groupId },
+      });
+
+      if (!existingRound) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Round not found",
+        });
+      }
 
       const round = await ctx.prisma.round.update({
         where: { id },
@@ -110,8 +130,20 @@ export const roundsRouter = createTRPCRouter({
     }),
 
   delete: protectedProcedure
-    .input(z.object({ id: z.number() }))
+    .input(z.object({ id: z.number(), groupId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
+      // Verify the round belongs to the group
+      const existingRound = await ctx.prisma.round.findFirst({
+        where: { id: input.id, groupId: input.groupId },
+      });
+
+      if (!existingRound) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Round not found",
+        });
+      }
+
       await ctx.prisma.round.delete({
         where: { id: input.id },
       });
@@ -124,10 +156,23 @@ export const roundsRouter = createTRPCRouter({
       z.object({
         roundId: z.number(),
         songIds: z.array(z.number()),
+        groupId: z.string().min(1),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { roundId, songIds } = input;
+      const { roundId, songIds, groupId } = input;
+
+      // Verify the round belongs to the group
+      const existingRound = await ctx.prisma.round.findFirst({
+        where: { id: roundId, groupId },
+      });
+
+      if (!existingRound) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Round not found",
+        });
+      }
 
       await ctx.prisma.$transaction(async (tx) => {
         // Fetch existing items once
@@ -181,10 +226,23 @@ export const roundsRouter = createTRPCRouter({
         roundId: z.number(),
         songId: z.number(),
         position: z.number().optional(),
+        groupId: z.string().min(1),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { roundId, songId, position } = input;
+      const { roundId, songId, position, groupId } = input;
+
+      // Verify the round belongs to the group
+      const existingRound = await ctx.prisma.round.findFirst({
+        where: { id: roundId, groupId },
+      });
+
+      if (!existingRound) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Round not found",
+        });
+      }
 
       const lastPosition = await ctx.prisma.roundItem.findFirst({
         where: { roundId },
@@ -210,9 +268,22 @@ export const roundsRouter = createTRPCRouter({
       z.object({
         roundId: z.number(),
         songId: z.number(),
+        groupId: z.string().min(1),
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // Verify the round belongs to the group
+      const existingRound = await ctx.prisma.round.findFirst({
+        where: { id: input.roundId, groupId: input.groupId },
+      });
+
+      if (!existingRound) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Round not found",
+        });
+      }
+
       await ctx.prisma.roundItem.deleteMany({
         where: {
           roundId: input.roundId,

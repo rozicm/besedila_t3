@@ -12,6 +12,7 @@ import { Checkbox } from "~/components/ui/checkbox";
 import { Textarea } from "~/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Plus, Edit, Trash2, Star, Search, Download, Music } from "lucide-react";
+import { useGroup, GroupSelector } from "~/components/group-context";
 
 const ACCORDION_TUNINGS = [
   { value: "C-F-B", label: "C-F-B" },
@@ -50,14 +51,19 @@ export default function SongsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSong, setEditingSong] = useState<any>(null);
 
+  const { selectedGroupId, isLoading: isGroupLoading } = useGroup();
   const utils = api.useContext();
 
-  const { data: songs, isLoading } = api.songs.list.useQuery({
-    search: search || undefined,
-    genre: genre || undefined,
-    harmonica: harmonica || undefined,
-    favorite,
-  });
+  const { data: songs, isLoading } = api.songs.list.useQuery(
+    {
+      groupId: selectedGroupId!,
+      search: search || undefined,
+      genre: genre || undefined,
+      harmonica: harmonica || undefined,
+      favorite,
+    },
+    { enabled: !!selectedGroupId }
+  );
 
   const createMutation = api.songs.create.useMutation({
     onSuccess: () => {
@@ -88,10 +94,11 @@ export default function SongsPage() {
   });
 
   const handleSave = (formData: any) => {
+    if (!selectedGroupId) return;
     if (editingSong) {
-      updateMutation.mutate({ ...formData, id: editingSong.id });
+      updateMutation.mutate({ ...formData, id: editingSong.id, groupId: selectedGroupId });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate({ ...formData, groupId: selectedGroupId });
     }
   };
 
@@ -101,13 +108,15 @@ export default function SongsPage() {
   };
 
   const handleDelete = (songId: number) => {
+    if (!selectedGroupId) return;
     if (confirm("Are you sure you want to delete this song?")) {
-      deleteMutation.mutate({ id: songId });
+      deleteMutation.mutate({ id: songId, groupId: selectedGroupId });
     }
   };
 
   const handleToggleFavorite = (songId: number) => {
-    toggleFavoriteMutation.mutate({ id: songId });
+    if (!selectedGroupId) return;
+    toggleFavoriteMutation.mutate({ id: songId, groupId: selectedGroupId });
   };
 
   const handleCloseModal = () => {
@@ -115,12 +124,40 @@ export default function SongsPage() {
     setEditingSong(null);
   };
 
+  if (isGroupLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!selectedGroupId) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Music className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+          <h3 className="mb-2 text-lg font-semibold">No group selected</h3>
+          <p className="text-muted-foreground">
+            Please create or join a group to manage songs.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6 md:px-6 md:py-8">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Songs</h1>
+            <div className="flex items-center gap-4 mb-2">
+              <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Songs</h1>
+              <GroupSelector />
+            </div>
             <p className="mt-2 text-muted-foreground">
               Manage your band&apos;s song library
             </p>

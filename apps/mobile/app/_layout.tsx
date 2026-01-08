@@ -1,22 +1,21 @@
+import "../global.css";
+
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import 'react-native-reanimated';
 import { useAuth } from '@clerk/clerk-expo';
 import { ClerkProviderWrapper } from '../providers/clerk-provider';
 import { TRPCProvider } from '../providers/trpc-provider';
-
+import { GroupProvider } from '../providers/group-context';
 import { useColorScheme } from '@/components/useColorScheme';
 
 export {
-  // Catch any errors thrown by the Layout component.
   ErrorBoundary,
 } from 'expo-router';
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -25,7 +24,6 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
   }, [error]);
@@ -43,7 +41,9 @@ export default function RootLayout() {
   return (
     <ClerkProviderWrapper>
       <TRPCProvider>
-        <RootLayoutNav />
+        <GroupProvider>
+          <RootLayoutNav />
+        </GroupProvider>
       </TRPCProvider>
     </ClerkProviderWrapper>
   );
@@ -61,10 +61,8 @@ function RootLayoutNav() {
     const inAuthGroup = segments[0] === '(auth)';
 
     if (!isSignedIn && !inAuthGroup) {
-      // Redirect to sign in
       router.replace('/(auth)/sign-in');
     } else if (isSignedIn && inAuthGroup) {
-      // Redirect to app
       router.replace('/(app)');
     }
   }, [isSignedIn, isLoaded, segments]);

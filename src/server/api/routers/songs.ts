@@ -12,6 +12,7 @@ const songInputSchema = z.object({
   favorite: z.boolean().optional(),
   harmonica: z.enum(["C-F-B", "B-Es-As", "A-D-G"]).optional(),
   bas_bariton: z.string().optional(),
+  groupId: z.string().min(1),
 });
 
 // Helper function to fetch and extract lyrics from a URL
@@ -113,33 +114,36 @@ export const songsRouter = createTRPCRouter({
   list: protectedProcedure
     .input(
       z.object({
+        groupId: z.string().min(1),
         search: z.string().optional(),
         genre: z.string().optional(),
         harmonica: z.string().optional(),
         favorite: z.boolean().optional(),
         sortBy: z.enum(["title", "createdAt", "favorite"]).optional(),
         order: z.enum(["asc", "desc"]).optional(),
-      }).optional()
+      })
     )
     .query(async ({ ctx, input }) => {
-      const where: any = {};
+      const where: any = {
+        groupId: input.groupId,
+      };
 
-      if (input?.search) {
+      if (input.search) {
         where.title = { contains: input.search, mode: "insensitive" };
       }
-      if (input?.genre) {
+      if (input.genre) {
         where.genre = { contains: input.genre, mode: "insensitive" };
       }
-      if (input?.harmonica) {
+      if (input.harmonica) {
         where.harmonica = { contains: input.harmonica, mode: "insensitive" };
       }
-      if (input?.favorite !== undefined) {
+      if (input.favorite !== undefined) {
         where.favorite = input.favorite;
       }
 
       const orderBy: any = {};
-      if (input?.sortBy) {
-        orderBy[input.sortBy] = input?.order ?? "asc";
+      if (input.sortBy) {
+        orderBy[input.sortBy] = input.order ?? "asc";
       } else {
         orderBy.title = "asc";
       }
@@ -153,10 +157,10 @@ export const songsRouter = createTRPCRouter({
     }),
 
   get: protectedProcedure
-    .input(z.object({ id: z.number() }))
+    .input(z.object({ id: z.number(), groupId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
-      const song = await ctx.prisma.song.findUnique({
-        where: { id: input.id },
+      const song = await ctx.prisma.song.findFirst({
+        where: { id: input.id, groupId: input.groupId },
       });
 
       if (!song) {
@@ -181,7 +185,19 @@ export const songsRouter = createTRPCRouter({
   update: protectedProcedure
     .input(z.object({ id: z.number() }).extend(songInputSchema.shape))
     .mutation(async ({ ctx, input }) => {
-      const { id, ...data } = input;
+      const { id, groupId, ...data } = input;
+
+      // Verify the song belongs to the group
+      const existingSong = await ctx.prisma.song.findFirst({
+        where: { id, groupId },
+      });
+
+      if (!existingSong) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Song not found",
+        });
+      }
 
       const song = await ctx.prisma.song.update({
         where: { id },
@@ -192,8 +208,20 @@ export const songsRouter = createTRPCRouter({
     }),
 
   delete: protectedProcedure
-    .input(z.object({ id: z.number() }))
+    .input(z.object({ id: z.number(), groupId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
+      // Verify the song belongs to the group
+      const existingSong = await ctx.prisma.song.findFirst({
+        where: { id: input.id, groupId: input.groupId },
+      });
+
+      if (!existingSong) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Song not found",
+        });
+      }
+
       await ctx.prisma.song.delete({
         where: { id: input.id },
       });
@@ -202,10 +230,10 @@ export const songsRouter = createTRPCRouter({
     }),
 
   toggleFavorite: protectedProcedure
-    .input(z.object({ id: z.number() }))
+    .input(z.object({ id: z.number(), groupId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      const song = await ctx.prisma.song.findUnique({
-        where: { id: input.id },
+      const song = await ctx.prisma.song.findFirst({
+        where: { id: input.id, groupId: input.groupId },
       });
 
       if (!song) {

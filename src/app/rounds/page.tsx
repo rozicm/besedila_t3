@@ -8,7 +8,8 @@ import { Textarea } from "~/components/ui/textarea";
 import { Label } from "~/components/ui/label";
 import { Modal } from "~/components/ui/modal";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "~/components/ui/card";
-import { Plus, Edit, Trash2, GripVertical } from "lucide-react";
+import { Plus, Edit, Trash2, GripVertical, List } from "lucide-react";
+import { useGroup, GroupSelector } from "~/components/group-context";
 import {
   DndContext,
   closestCenter,
@@ -90,10 +91,17 @@ export default function RoundsPage() {
   const [editingRound, setEditingRound] = useState<any>(null);
   const [selectedSongs, setSelectedSongs] = useState<number[]>([]);
 
+  const { selectedGroupId, isLoading: isGroupLoading } = useGroup();
   const utils = api.useContext();
 
-  const { data: rounds, isLoading: roundsLoading } = api.rounds.list.useQuery();
-  const { data: allSongs, isLoading: songsLoading } = api.songs.list.useQuery();
+  const { data: rounds, isLoading: roundsLoading } = api.rounds.list.useQuery(
+    { groupId: selectedGroupId! },
+    { enabled: !!selectedGroupId }
+  );
+  const { data: allSongs, isLoading: songsLoading } = api.songs.list.useQuery(
+    { groupId: selectedGroupId! },
+    { enabled: !!selectedGroupId }
+  );
 
   const createMutation = api.rounds.create.useMutation({
     onSuccess: () => {
@@ -126,9 +134,9 @@ export default function RoundsPage() {
     // Optimistically reorder songs locally for instant UI feedback
     onMutate: async (variables) => {
       await utils.rounds.list.cancel();
-      const previous = utils.rounds.list.getData();
+      const previous = utils.rounds.list.getData({ groupId: selectedGroupId! });
 
-      utils.rounds.list.setData(undefined, (old: any) => {
+      utils.rounds.list.setData({ groupId: selectedGroupId! }, (old: any) => {
         if (!old) return old;
         return old.map((round: any) => {
           if (round.id !== variables.roundId) return round;
@@ -157,7 +165,7 @@ export default function RoundsPage() {
     },
     onError: (_err, _variables, context) => {
       if (context?.previous) {
-        utils.rounds.list.setData(undefined, context.previous as any);
+        utils.rounds.list.setData({ groupId: selectedGroupId! }, context.previous as any);
       }
     },
     // No refetch on success; optimistic update already applied
@@ -166,9 +174,9 @@ export default function RoundsPage() {
   const removeSongMutation = api.rounds.removeSong.useMutation({
     onMutate: async (variables) => {
       await utils.rounds.list.cancel();
-      const previous = utils.rounds.list.getData();
+      const previous = utils.rounds.list.getData({ groupId: selectedGroupId! });
 
-      utils.rounds.list.setData(undefined, (old: any) => {
+      utils.rounds.list.setData({ groupId: selectedGroupId! }, (old: any) => {
         if (!old) return old;
         return old.map((round: any) => {
           if (round.id !== variables.roundId) return round;
@@ -183,7 +191,7 @@ export default function RoundsPage() {
     },
     onError: (_err, _variables, context) => {
       if (context?.previous) {
-        utils.rounds.list.setData(undefined, context.previous as any);
+        utils.rounds.list.setData({ groupId: selectedGroupId! }, context.previous as any);
       }
     },
     onSettled: () => {
@@ -203,8 +211,9 @@ export default function RoundsPage() {
   );
 
   const handleCreateRound = (name: string, description?: string) => {
+    if (!selectedGroupId) return;
     if (selectedSongs.length > 0) {
-      createMutation.mutate({ name, description, songIds: selectedSongs });
+      createMutation.mutate({ name, description, songIds: selectedSongs, groupId: selectedGroupId });
     }
   };
 
@@ -215,7 +224,7 @@ export default function RoundsPage() {
   };
 
   const handleUpdateRound = async (name: string, description?: string) => {
-    if (!editingRound) return;
+    if (!editingRound || !selectedGroupId) return;
 
     // Update name and description
     const nameOrDescChanged = 
@@ -238,6 +247,7 @@ export default function RoundsPage() {
             id: editingRound.id,
             name,
             description: description || undefined,
+            groupId: selectedGroupId,
           })
         );
       }
@@ -247,6 +257,7 @@ export default function RoundsPage() {
           updateSongsMutation.mutateAsync({
             roundId: editingRound.id,
             songIds: selectedSongs,
+            groupId: selectedGroupId,
           })
         );
       }
@@ -262,15 +273,16 @@ export default function RoundsPage() {
   };
 
   const handleDeleteRound = (roundId: number) => {
+    if (!selectedGroupId) return;
     if (confirm("Are you sure you want to delete this round?")) {
-      deleteMutation.mutate({ id: roundId });
+      deleteMutation.mutate({ id: roundId, groupId: selectedGroupId });
     }
   };
 
   const handleDragEnd = (event: DragEndEvent, roundId: number) => {
     const { active, over } = event;
 
-    if (!over || active.id === over.id) return;
+    if (!over || active.id === over.id || !selectedGroupId) return;
 
     const round = rounds?.find((r) => r.id === roundId);
     if (!round) return;
@@ -290,7 +302,7 @@ export default function RoundsPage() {
     const newOrder = arrayMove(round.roundItems, oldIndex, newIndex);
     const newSongIds = newOrder.map((item) => item.song.id);
 
-    reorderMutation.mutate({ roundId, songIds: newSongIds });
+    reorderMutation.mutate({ roundId, songIds: newSongIds, groupId: selectedGroupId });
   };
 
   const toggleSongSelection = (songId: number) => {
@@ -301,6 +313,31 @@ export default function RoundsPage() {
     );
   };
 
+  if (isGroupLoading) {
+    return (
+      <div className="container mx-auto p-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!selectedGroupId) {
+    return (
+      <div className="container mx-auto p-8 flex items-center justify-center">
+        <div className="text-center">
+          <List className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+          <h3 className="mb-2 text-lg font-semibold">No group selected</h3>
+          <p className="text-muted-foreground">
+            Please create or join a group to manage rounds.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (roundsLoading || songsLoading) {
     return <div className="container mx-auto p-8">Loading...</div>;
   }
@@ -308,7 +345,10 @@ export default function RoundsPage() {
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h1 className="text-2xl sm:text-3xl font-bold">Rounds</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl sm:text-3xl font-bold">Rounds</h1>
+          <GroupSelector />
+        </div>
         <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           Add New Round
@@ -362,7 +402,7 @@ export default function RoundsPage() {
                       <SortableItem
                         key={item.song.id}
                         song={item.song}
-                        onRemove={() => removeSongMutation.mutate({ roundId: round.id, songId: item.song.id })}
+                        onRemove={() => selectedGroupId && removeSongMutation.mutate({ roundId: round.id, songId: item.song.id, groupId: selectedGroupId })}
                       />
                     ))}
                   </div>

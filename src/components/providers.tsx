@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { TRPCProvider } from "~/providers/trpc-provider";
+import { GroupProvider } from "~/components/group-context";
 
 export function Providers({
   children,
@@ -32,7 +33,9 @@ export function Providers({
   return (
     <ClerkProvider publishableKey={clerkPublishableKey}>
       <QueryClientProvider client={queryClient}>
-        <TRPCProvider queryClient={queryClient}>{children}</TRPCProvider>
+        <TRPCProvider queryClient={queryClient}>
+          <GroupProvider>{children}</GroupProvider>
+        </TRPCProvider>
       </QueryClientProvider>
     </ClerkProvider>
   );
