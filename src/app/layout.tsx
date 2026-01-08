@@ -2,7 +2,7 @@ import "~/styles/globals.css";
 import { Providers } from "~/components/providers";
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
 import { ThemeProvider } from "~/components/theme-provider";
-import { Nav } from "~/components/layout/nav";
+import { Sidebar } from "~/components/layout/sidebar";
 
 export const metadata = {
   title: "Band Song Manager",
@@ -38,9 +38,9 @@ export default function RootLayout({
         <ThemeProvider defaultTheme="light">
           <Providers clerkPublishableKey={publishableKey}>
             <SignedIn>
-              <div className="flex min-h-screen flex-col">
-                <Nav />
-                <main className="flex-1">{children}</main>
+              <div className="flex min-h-screen">
+                <Sidebar />
+                <main className="flex-1 pt-16 md:ml-64 md:pt-0">{children}</main>
               </div>
             </SignedIn>
             <SignedOut>

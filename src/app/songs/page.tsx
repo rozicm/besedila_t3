@@ -11,7 +11,7 @@ import { Modal } from "~/components/ui/modal";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Textarea } from "~/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import { Plus, Edit, Trash2, Star, Search, Download } from "lucide-react";
+import { Plus, Edit, Trash2, Star, Search, Download, Music } from "lucide-react";
 
 const ACCORDION_TUNINGS = [
   { value: "C-F-B", label: "C-F-B" },
@@ -116,18 +116,28 @@ export default function SongsPage() {
   };
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-      <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h1 className="text-2xl sm:text-3xl font-bold">Songs</h1>
-        <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto">
-          <Plus className="mr-2 h-4 w-4" />
-          Add New Song
-        </Button>
-      </div>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-6 md:px-6 md:py-8">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Songs</h1>
+            <p className="mt-2 text-muted-foreground">
+              Manage your band&apos;s song library
+            </p>
+          </div>
+          <Button
+            onClick={() => setIsModalOpen(true)}
+            className="w-full sm:w-auto"
+            size="lg"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add New Song
+          </Button>
+        </div>
 
-      <Card className="mb-6">
+      <Card className="mb-6 border-border/50">
         <CardHeader>
-          <CardTitle className="text-lg sm:text-xl">Filters</CardTitle>
+          <CardTitle className="text-lg font-semibold">Filters</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -183,65 +193,107 @@ export default function SongsPage() {
       </Card>
 
       {isLoading ? (
-        <div>Loading...</div>
-      ) : (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {songs?.map((song) => (
-            <Card key={song.id}>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+            <p className="text-muted-foreground">Loading songs...</p>
+          </div>
+        </div>
+      ) : songs && songs.length > 0 ? (
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {songs.map((song) => (
+            <Card
+              key={song.id}
+              className="group transition-all hover:shadow-md hover:shadow-primary/5"
+            >
               <CardHeader>
-                <div className="flex items-start justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    {song.favorite && <Star className="h-5 w-5 fill-yellow-500" />}
-                    {song.title}
+                <div className="flex items-start justify-between gap-2">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    {song.favorite && (
+                      <Star className="h-5 w-5 fill-yellow-500 text-yellow-500" />
+                    )}
+                    <span className="line-clamp-2">{song.title}</span>
                   </CardTitle>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon"
+                      className="h-8 w-8"
                       onClick={() => handleToggleFavorite(song.id)}
+                      title={song.favorite ? "Remove from favorites" : "Add to favorites"}
                     >
                       <Star
                         className={`h-4 w-4 ${
-                          song.favorite ? "fill-yellow-500" : ""
+                          song.favorite ? "fill-yellow-500 text-yellow-500" : ""
                         }`}
                       />
                     </Button>
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon"
+                      className="h-8 w-8"
                       onClick={() => handleEdit(song)}
+                      title="Edit song"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
                       onClick={() => handleDelete(song.id)}
+                      title="Delete song"
                     >
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">Genre: {song.genre}</p>
+              <CardContent className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-muted-foreground">Genre:</span>
+                  <span className="text-sm">{song.genre}</span>
+                </div>
                 {song.key && (
-                  <p className="text-sm text-muted-foreground">Key: {song.key}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground">Key:</span>
+                    <span className="text-sm">{song.key}</span>
+                  </div>
                 )}
                 {song.harmonica && (
-                  <p className="text-sm text-muted-foreground">
-                    Accordion: {normalizeHarmonica(song.harmonica)}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground">Accordion:</span>
+                    <span className="text-sm">{normalizeHarmonica(song.harmonica)}</span>
+                  </div>
                 )}
                 {song.bas_bariton && (
-                  <p className="text-sm text-muted-foreground">
-                    Instrument: {song.bas_bariton}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground">Instrument:</span>
+                    <span className="text-sm">{song.bas_bariton}</span>
+                  </div>
                 )}
               </CardContent>
             </Card>
           ))}
         </div>
+      ) : (
+        <Card className="py-12">
+          <CardContent className="text-center">
+            <Music className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <h3 className="mb-2 text-lg font-semibold">No songs found</h3>
+            <p className="mb-4 text-muted-foreground">
+              {search || genre || harmonica || favorite
+                ? "Try adjusting your filters"
+                : "Get started by adding your first song"}
+            </p>
+            {!(search || genre || harmonica || favorite) && (
+              <Button onClick={() => setIsModalOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add New Song
+              </Button>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       <SongFormModal
@@ -250,6 +302,7 @@ export default function SongsPage() {
         onSave={handleSave}
         editingSong={editingSong}
       />
+      </div>
     </div>
   );
 }

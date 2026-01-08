@@ -34,6 +34,8 @@ model Song {
   bas_bariton   String?        @map("bas_bariton") // deprecated compat column kept if needed
 
   roundItems    RoundItem[]
+  performanceSetlistItems PerformanceSetlistItem[]
+  groupSongs    GroupSong[]
 
   createdAt     DateTime       @map("inserted_at") @default(now())
   updatedAt     DateTime       @map("updated_at") @updatedAt
@@ -126,6 +128,11 @@ model User {
   accounts      Account[]
   sessions      Session[]
   posts         Post[]
+  
+  // Multi-group support
+  groupMembers  GroupMember[]
+  invitations   GroupInvitation[]
+  notifications PushSubscription[]
 
   @@map("users")
 }
@@ -137,6 +144,156 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+// Groups/Bands (Ansambli/Skupine)
+model Group {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  members     GroupMember[]
+  invitations GroupInvitation[]
+  performances Performance[]
+  songs       GroupSong[]
+
+  @@index([name])
+  @@map("groups")
+}
+
+enum GroupRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model GroupMember {
+  id        String    @id @default(cuid())
+  groupId   String    @map("group_id")
+  userId    String    @map("user_id")
+  role      GroupRole @default(MEMBER)
+  joinedAt  DateTime  @default(now()) @map("joined_at")
+
+  group     Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([userId])
+  @@map("group_members")
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  CANCELLED
+}
+
+model GroupInvitation {
+  id        String           @id @default(cuid())
+  groupId   String           @map("group_id")
+  email     String
+  userId    String?          @map("user_id")
+  role      GroupRole        @default(MEMBER)
+  status    InvitationStatus @default(PENDING)
+  token     String           @unique @default(cuid())
+  expiresAt DateTime         @map("expires_at")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  group     Group            @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([groupId])
+  @@index([email])
+  @@index([token])
+  @@map("group_invitations")
+}
+
+// Performances (Nastopi)
+model Performance {
+  id          String    @id @default(cuid())
+  groupId     String    @map("group_id")
+  name        String
+  description String?
+  location    String?
+  date        DateTime
+  duration    Int?      // duration in minutes
+  notes       String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  group       Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  setlist     PerformanceSetlistItem[]
+  reminders   PerformanceReminder[]
+
+  @@index([groupId])
+  @@index([date])
+  @@map("performances")
+}
+
+// Setlist items for a performance
+model PerformanceSetlistItem {
+  id            String      @id @default(cuid())
+  performanceId String      @map("performance_id")
+  songId        Int         @map("song_id")
+  position      Int         @default(0)
+  notes         String?     // notes specific to this performance (e.g., "extra slow", "skip verse 2")
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  performance   Performance @relation(fields: [performanceId], references: [id], onDelete: Cascade)
+  song          Song        @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([performanceId, songId])
+  @@index([performanceId, position])
+  @@map("performance_setlist_items")
+}
+
+// Group-specific songs (which songs belong to which groups)
+model GroupSong {
+  id        String   @id @default(cuid())
+  groupId   String   @map("group_id")
+  songId    Int      @map("song_id")
+  addedAt   DateTime @default(now()) @map("added_at")
+
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, songId])
+  @@index([groupId])
+  @@index([songId])
+  @@map("group_songs")
+}
+
+// Performance reminders
+model PerformanceReminder {
+  id            String      @id @default(cuid())
+  performanceId String      @map("performance_id")
+  reminderTime  DateTime    @map("reminder_time")
+  sent          Boolean     @default(false)
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  performance   Performance @relation(fields: [performanceId], references: [id], onDelete: Cascade)
+
+  @@index([performanceId])
+  @@index([reminderTime, sent])
+  @@map("performance_reminders")
+}
+
+// Push notification subscriptions
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }
 
 

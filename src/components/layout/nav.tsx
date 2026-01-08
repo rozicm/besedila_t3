@@ -14,6 +14,10 @@ const navigation = [
   { name: "Songs", href: "/songs" },
   { name: "Rounds", href: "/rounds" },
   { name: "Performance", href: "/performance" },
+  { name: "Groups", href: "/groups" },
+  { name: "Calendar", href: "/calendar" },
+  { name: "Notifications", href: "/notifications" },
+  { name: "Settings", href: "/settings/notifications" },
 ];
 
 export function Nav() {
