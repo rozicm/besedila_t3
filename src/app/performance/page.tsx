@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Label } from "~/components/ui/label";
 import { ArrowLeft, ArrowRight, Download, X, Maximize2 } from "lucide-react";
+import { useGroup } from "~/components/group-context";
 
 export default function PerformancePage() {
   const [selectedRounds, setSelectedRounds] = useState<number[]>([]);
@@ -17,7 +18,11 @@ export default function PerformancePage() {
   const [fontSize, setFontSize] = useState(24); // Base font size
   const [performanceStarted, setPerformanceStarted] = useState(false);
 
-  const { data: rounds, isLoading: roundsLoading } = api.rounds.list.useQuery();
+  const { selectedGroupId } = useGroup();
+  const { data: rounds, isLoading: roundsLoading } = api.rounds.list.useQuery(
+    { groupId: selectedGroupId! },
+    { enabled: !!selectedGroupId }
+  );
 
   const { data: performanceData, isLoading: performanceLoading } =
     api.performance.getPerformanceData.useQuery(

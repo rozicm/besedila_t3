@@ -77,8 +77,14 @@ export default function PerformanceDetailPage() {
   const { data: performance, isLoading } = api.performances.get.useQuery({
     id: performanceId,
   });
-  const { data: songs } = api.songs.list.useQuery();
-  const { data: rounds } = api.rounds.list.useQuery();
+  const { data: songs } = api.songs.list.useQuery(
+    { groupId: performance?.group.id ?? "" },
+    { enabled: !!performance?.group.id }
+  );
+  const { data: rounds } = api.rounds.list.useQuery(
+    { groupId: performance?.group.id ?? "" },
+    { enabled: !!performance?.group.id }
+  );
 
   const addSongMutation = api.performances.addSongToSetlist.useMutation({
     onSuccess: () => {

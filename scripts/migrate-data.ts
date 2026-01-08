@@ -29,6 +29,22 @@ const targetPrisma = new PrismaClient({
 async function main() {
   console.log('Starting data migration...');
 
+  // Step 0: Create or get default migration group
+  console.log('Setting up default group for migration...');
+  let defaultGroup = await targetPrisma.group.findFirst({
+    where: { name: 'Migration Group' },
+  });
+
+  if (!defaultGroup) {
+    defaultGroup = await targetPrisma.group.create({
+      data: {
+        name: 'Migration Group',
+        description: 'Default group for migrated data',
+      },
+    });
+  }
+  console.log(`✓ Using group: ${defaultGroup.name} (${defaultGroup.id})`);
+
   // Step 1: Delete all data from target database
   console.log('Deleting all existing data...');
   await targetPrisma.roundItem.deleteMany();
@@ -56,6 +72,7 @@ async function main() {
         accordionTuning: song.accordion_tuning as any,
         instrument: song.instrument as any,
         bas_bariton: song.bas_bariton,
+        groupId: defaultGroup.id,
         createdAt: song.inserted_at,
         updatedAt: song.updated_at,
       },
@@ -76,6 +93,7 @@ async function main() {
       data: {
         name: round.name,
         description: round.description,
+        groupId: defaultGroup.id,
         createdAt: round.inserted_at,
         updatedAt: round.updated_at,
       },
